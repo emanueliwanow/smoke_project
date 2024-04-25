@@ -19,7 +19,7 @@ class SMOKE:
         command.param5 = 0
         command.param6 = 0
         command.param7 = 0
-        self.smoke.call(False,0,187,open,0,0,0,0,0,0)
+        self.smoke.call(False,187,0,open,0,0,0,0,0,0)
 
 
 if __name__ == "__main__":
