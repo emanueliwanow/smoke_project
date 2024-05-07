@@ -14,27 +14,12 @@ def go():
     altitude = 1
 
     mav.takeoff(takeoff_alt)
-    rospy.loginfo("Takeoff finished, starting square")
+    rospy.loginfo("Takeoff finished")
     
     mav.set_position(0,0,altitude)    
     while not mav.chegou():
         mav.set_position(0,0,altitude)
-    mav.hold(1)
-    mav.set_position(1,0,altitude)
-    while not mav.chegou():
-        mav.set_position(1,0,altitude)
-    mav.hold(1)
-    mav.set_position(1,1,altitude)
-    while not mav.chegou():
-        mav.set_position(1,1,altitude)
-    mav.hold(1)
-    mav.set_position(0,1,altitude)
-    while not mav.chegou():
-        mav.set_position(0,1,altitude)
-    mav.hold(1)
-    mav.set_position(0,0,altitude)
-    while not mav.chegou():
-        mav.set_position(0,0,altitude)
+    
     
     
     rospy.loginfo("On hold")
