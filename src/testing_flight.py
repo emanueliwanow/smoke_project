@@ -23,7 +23,7 @@ def go():
     
     
     rospy.loginfo("On hold")
-    mav.hold(5)
+    mav.hold(20)
     
     #mav.set_altitude(1)
     mav.land()
