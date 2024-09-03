@@ -11,9 +11,9 @@ options = {
   map_frame = "map",
   tracking_frame = "base_link",
   published_frame = "base_link",
-  use_odometry = false,
+  use_odometry = true,
   provide_odom_frame = false,
-  odom_frame = "odom",
+  odom_frame = "base_link",
   publish_frame_projected_to_2d = false,
   use_pose_extrapolator = on,
   use_nav_sat = false,
@@ -31,6 +31,7 @@ options = {
   fixed_frame_pose_sampling_ratio = 1.,
   imu_sampling_ratio = 1.,
   landmarks_sampling_ratio = 1.,
+  publish_tracked_pose= true,
 }
 --tunning guide
 --https://google-cartographer-ros.readthedocs.io/en/latest/tuning.html
@@ -52,7 +53,7 @@ TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
 TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 1
 
 --use or not use IMU, if used, the tracking_frame should be set to the one that the IMU is on
-TRAJECTORY_BUILDER_2D.use_imu_data = true
+TRAJECTORY_BUILDER_2D.use_imu_data = false
 
 --bandpass filter for lidar distance measurements
 TRAJECTORY_BUILDER_2D.min_range = 0.3

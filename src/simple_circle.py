@@ -10,10 +10,10 @@ def go():
     rospy.init_node("mav_test")
     mav = MAV("1")
 
-    altitude = 0.9
+    altitude = 0.6
     takeoff_alt = altitude
     start_x = 0
-    radius = 1.5
+    radius = 0.5
     start_y = radius
     start_yaw = -math.pi/2
     circle_discretization = 20
