@@ -141,7 +141,7 @@ class BSA:
 
     def update_cellmap_3(self,x,y,surroundings):
         self.cell_grid.data[x+((y)*self.cell_grid.info.width)] = self.visited
-        rospy.loginfo(f'Center in x:{x} , y:{y}')
+        #rospy.loginfo(f'Center in x:{x} , y:{y}')
         if self.state == 1:
             if not self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] == self.visited:
                 if surroundings[0]:
@@ -244,18 +244,51 @@ class BSA:
                 if ((index)+(-shift*self.cartographer_grid.info.width-3*shift)+(i+(j*self.cartographer_grid.info.width))) < len(self.cartographer_grid.data): 
                     if self.cartographer_grid.data[(index)+(-shift*self.cartographer_grid.info.width-3*shift)+(i+(j*self.cartographer_grid.info.width))] > self.obstacle_th:
                         back = 1 
-                 
+        
         #self.debug_grid_pub.publish(self.debug_grid)  
         #self.rate.sleep() 
+        x,y = self.x,self.y
         if self.state == 0:
             return [front,right,back,left] 
         if self.state == 1:
+            if self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] == self.visited:
+                front = 1
+            #if self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] == self.visited:
+                #back = 1
+            if self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] == self.visited:
+                right = 1
+            if self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] == self.visited:
+                left = 1
             return [front,right,back,left]
         if self.state == 2:
+            if self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] == self.visited:
+                front = 1
+            if self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] == self.visited:
+                back = 1
+            if self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] == self.visited:
+                right = 1
+            #if self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] == self.visited:
+                #left = 1
             return [right,back,left,front]
         if self.state == 3:
+            #if self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] == self.visited:
+                #front = 1
+            if self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] == self.visited:
+                back = 1
+            if self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] == self.visited:
+                right = 1
+            if self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] == self.visited:
+                left = 1
             return [back,left,front,right]
         if self.state == 4:
+            if self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] == self.visited:
+                front = 1
+            if self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] == self.visited:
+                back = 1
+            #if self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] == self.visited:
+                #right = 1
+            if self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] == self.visited:
+                left = 1
             return [left,front,right,back]
 
     def go_front(self):
@@ -327,6 +360,9 @@ class BSA:
         self.move()
         while not rospy.is_shutdown():
             surroundings = self.check_surroundings_2()
+            rospy.loginfo(f'State: {self.state}')
+            rospy.loginfo(f'Obstacles: {surroundings}')
+
             self.update_cellmap_3(self.x,self.y,surroundings)
             if all(i==1 for i in surroundings):
                 break
@@ -335,6 +371,8 @@ class BSA:
                 self.move()
                 surroundings = self.check_surroundings_2()
                 self.update_cellmap_3(self.x,self.y,surroundings)
+                rospy.loginfo(f'State: {self.state}')
+                rospy.loginfo(f'Obstacles: {surroundings}')
             if surroundings[0]:
                 self.turn_right()
             else:
