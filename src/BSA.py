@@ -139,6 +139,78 @@ class BSA:
             else:
                 self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.free
 
+    def update_cellmap_3(self,x,y,surroundings):
+        self.cell_grid.data[x+((y)*self.cell_grid.info.width)] = self.visited
+        rospy.loginfo(f'Center in x:{x} , y:{y}')
+        if self.state == 1:
+            if not self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] == self.visited:
+                if surroundings[0]:
+                    self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[1]:
+                    self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)]  == self.visited:
+                if surroundings[3]:
+                    self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.free
+        if self.state == 2:
+            if not self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[0]:
+                    self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[1]:
+                    self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)]  == self.visited:
+                if surroundings[3]:
+                    self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] = self.free
+        if self.state == 3:
+            if not self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[0]:
+                    self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[1]:
+                    self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)]  == self.visited:
+                if surroundings[3]:
+                    self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.free
+        if self.state == 4:
+            if not self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[0]:
+                    self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[1]:
+                    self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+1+((y)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)]  == self.visited:
+                if surroundings[3]:
+                    self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] = self.free
+        
+        self.og_pub.publish(self.cell_grid)
+        self.rate.sleep()
+        
+
     def check_surroundings(self):
         number_of_scans = len(self.scan.ranges)
         increment = number_of_scans//4
@@ -168,14 +240,23 @@ class BSA:
                         front = 1
                 if ((index)+(-3*shift*self.cartographer_grid.info.width-shift)+(i+(j*self.cartographer_grid.info.width))) < len(self.cartographer_grid.data):   
                     if self.cartographer_grid.data[(index)+(-3*shift*self.cartographer_grid.info.width-shift)+(i+(j*self.cartographer_grid.info.width))] > self.obstacle_th:
-                        left = 1 
+                        right = 1 
                 if ((index)+(-shift*self.cartographer_grid.info.width-3*shift)+(i+(j*self.cartographer_grid.info.width))) < len(self.cartographer_grid.data): 
                     if self.cartographer_grid.data[(index)+(-shift*self.cartographer_grid.info.width-3*shift)+(i+(j*self.cartographer_grid.info.width))] > self.obstacle_th:
                         back = 1 
                  
         #self.debug_grid_pub.publish(self.debug_grid)  
-        #self.rate.sleep()       
-        return [front,right,back,left]
+        #self.rate.sleep() 
+        if self.state == 0:
+            return [front,right,back,left] 
+        if self.state == 1:
+            return [front,right,back,left]
+        if self.state == 2:
+            return [right,back,left,front]
+        if self.state == 3:
+            return [back,left,front,right]
+        if self.state == 4:
+            return [left,front,right,back]
 
     def go_front(self):
         self.x += 1
@@ -194,21 +275,75 @@ class BSA:
         self.x -= 1
         self.position_x -= self.cell_grid.info.resolution
         self.mav.set_position_with_yaw(self.position_x,self.position_y,self.altitude)
+    def move(self):
+        if self.state == 1:
+            self.go_front()
+        if self.state == 2:
+            self.go_right()
+        if self.state == 3:
+            self.go_back()
+        if self.state == 4:
+            self.go_left()
+
+    def turn_left(self):
+        rospy.loginfo("Turning left")
+        if self.state == 1:
+            new_state = 4
+        if self.state == 2:
+            new_state = 1
+        if self.state == 3:
+            new_state = 2
+        if self.state == 4:
+            new_state = 3
+        self.state = new_state
+    
+    def turn_right(self):
+        rospy.loginfo("Turning right")
+        if self.state == 1:
+            new_state = 2
+        if self.state == 2:
+            new_state = 3
+        if self.state == 3:
+            new_state = 4
+        if self.state == 4:
+            new_state = 1
+        self.state = new_state
 
     def BSA_loop(self):
+        self.state = 1 
         surroundings = self.check_surroundings_2()
         self.x,self.y = self.get_costmap_x_y(self.cell_grid,self.position_x,self.position_y)
-        self.update_cellmap_2(self.x,self.y,surroundings)
+        self.update_cellmap_3(self.x,self.y,surroundings)
         self.og_pub.publish(self.cell_grid)
 
         while all(i==0 for i in surroundings) and not rospy.is_shutdown():  
             self.state = 1          
-            self.go_front()
+            self.move()
             self.mav.hold(1)
             surroundings = self.check_surroundings_2()
-            self.update_cellmap_2(self.x,self.y,surroundings)
-            self.og_pub.publish(self.cell_grid)
-            self.rate.sleep()
+            self.update_cellmap_3(self.x,self.y,surroundings)
+            
+        self.state = 2
+        self.move()
+        while not rospy.is_shutdown():
+            surroundings = self.check_surroundings_2()
+            self.update_cellmap_3(self.x,self.y,surroundings)
+            if all(i==1 for i in surroundings):
+                break
+            if not surroundings[3]:
+                self.turn_left()
+                self.move()
+                surroundings = self.check_surroundings_2()
+                self.update_cellmap_3(self.x,self.y,surroundings)
+            if surroundings[0]:
+                self.turn_right()
+            else:
+                self.move()
+
+            
+                
+
+
 
 
         
