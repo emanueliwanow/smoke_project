@@ -9,6 +9,7 @@ from mavbase.MAV import MAV
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped, Pose
+from itertools import product
 
 
 class BSA:
@@ -92,6 +93,86 @@ class BSA:
         world_x = costmap_x * grid.info.resolution + grid.info.origin.position.x + grid.info.resolution/2
         world_y = costmap_y * grid.info.resolution + grid.info.origin.position.y + grid.info.resolution/2
         return world_x, world_y
+    
+    def is_in_gridmap(self, x, y, grid):
+        if -1 < x < grid.info.width and -1 < y < grid.info.height:
+            return True
+        else:
+            return False
+    
+    def get_cost_from_costmap_x_y(self, x, y,grid):
+        if self.is_in_gridmap(x, y,grid):
+            # data comes in row-major order http://docs.ros.org/en/melodic/api/nav_msgs/html/msg/OccupancyGrid.html
+            # first index is the row, second index the column
+            return grid.data[x+(y*grid.info.width)]
+        else:
+            raise IndexError(
+                "Coordinates out of gridmap, x: {}, y: {} must be in between: [0, {}], [0, {}]".format(
+                    x, y, grid.info.height, grid.info.width))
+
+    def get_closest_cell_arbitrary_cost(self, x, y, grid, cost_threshold=10, max_radius=50, bigger_than=False):
+
+        # Check the actual goal cell
+        try:
+            cost = self.get_cost_from_costmap_x_y(x, y,grid)
+        except IndexError:
+            return None
+
+        if bigger_than:
+            if cost > cost_threshold and cost != -1:
+                return x, y, cost
+        else:
+            if cost < cost_threshold and cost != -1:
+                return x, y, cost
+
+        def create_radial_offsets_coords(radius):
+            """
+            Creates an ordered by radius (without repetition)
+            generator of coordinates to explore around an initial point 0, 0
+
+            For example, radius 2 looks like:
+            [(-1, -1), (-1, 0), (-1, 1), (0, -1),  # from radius 1
+            (0, 1), (1, -1), (1, 0), (1, 1),  # from radius 1
+            (-2, -2), (-2, -1), (-2, 0), (-2, 1),
+            (-2, 2), (-1, -2), (-1, 2), (0, -2),
+            (0, 2), (1, -2), (1, 2), (2, -2),
+            (2, -1), (2, 0), (2, 1), (2, 2)]
+            """
+            # We store the previously given coordinates to not repeat them
+            # we use a Dict as to take advantage of its hash table to make it more efficient
+            coords = {}
+            # iterate increasing over every radius value...
+            for r in range(1, radius + 1):
+                # for this radius value... (both product and range are generators too)
+                tmp_coords = product(range(-r, r + 1), repeat=2)
+                # only yield new coordinates
+                for i, j in tmp_coords:
+                    if (i, j) != (0, 0) and not coords.get((i, j), False):
+                        coords[(i, j)] = True
+                        yield (i, j)
+
+        coords_to_explore = create_radial_offsets_coords(max_radius)
+
+        for idx, radius_coords in enumerate(coords_to_explore):
+            # for coords in radius_coords:
+            tmp_x, tmp_y = radius_coords
+            # print("Checking coords: " +
+            #       str((x + tmp_x, y + tmp_y)) +
+            #       " (" + str(idx) + " / " + str(len(coords_to_explore)) + ")")
+            try:
+                cost = self.get_cost_from_costmap_x_y(x + tmp_x, y + tmp_y,grid)
+            # If accessing out of grid, just ignore
+            except IndexError:
+                pass
+            if bigger_than:
+                if cost > cost_threshold and cost != -1:
+                    return x + tmp_x, y + tmp_y, cost
+
+            else:
+                if cost < cost_threshold and cost != -1:
+                    return x + tmp_x, y + tmp_y, cost
+
+        return -1, -1, -1
 
        
     def update_cellmap(self,world_x,world_y,surroundings):
@@ -342,6 +423,20 @@ class BSA:
             new_state = 1
         self.state = new_state
 
+    def backtracking(self,x,y,grid):
+        # Backtracking without obstacle avoidance
+        goal_x,goal_y,cost = self.get_closest_cell_arbitrary_cost(x,y,grid)
+        if goal_x != -1:
+            self.position_x = self.position_x + self.cell_grid.info.resolution*(goal_x-self.x)
+            self.position_y = self.position_y + self.cell_grid.info.resolution*(goal_y-self.y)
+            self.x = goal_x
+            self.y = goal_y
+            self.mav.set_position_with_yaw(self.position_x,self.position_y,self.altitude)
+            return True
+        else:
+            return False
+
+
     def BSA_loop(self):
         self.state = 1 
         surroundings = self.check_surroundings_2()
@@ -364,8 +459,16 @@ class BSA:
             rospy.loginfo(f'Obstacles: {surroundings}')
 
             self.update_cellmap_3(self.x,self.y,surroundings)
-            if all(i==1 for i in surroundings):
-                break
+            if surroundings == [1,1,0,1]:
+                rospy.loginfo("Spiral end detected")
+                rospy.loginfo("Attempting to backtrack")
+                backtrack = self.backtracking(self.x,self.y,self.cell_grid)
+                surroundings = self.check_surroundings_2()
+                self.update_cellmap_3(self.x,self.y,surroundings)
+                if not backtrack:
+                    rospy.loginfo("Finished exploration")
+                    break
+                
             if not surroundings[3]:
                 self.turn_left()
                 self.move()
