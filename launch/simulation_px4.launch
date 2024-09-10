@@ -15,7 +15,7 @@
     <!-- vehicle model and world -->
     <arg name="est" default="ekf2"/>
     <arg name="vehicle" default="iris_vision"/>
-    <arg name="world" default="$(find smoke_project)/worlds/simple_room.world"/>
+    <arg name="world" default="$(find smoke_project)/worlds/simple_office_f.world"/>
     <arg name="sdf" default="$(find mavlink_sitl_gazebo)/models/$(arg vehicle)/$(arg vehicle).sdf"/>
 
     <!-- gazebo configs -->

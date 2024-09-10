@@ -27,7 +27,7 @@ options = {
   pose_publish_period_sec = 5e-3,
   trajectory_publish_period_sec = 30e-3,
   rangefinder_sampling_ratio = 1.,
-  odometry_sampling_ratio = 1.,
+  odometry_sampling_ratio = 0.8,
   fixed_frame_pose_sampling_ratio = 1.,
   imu_sampling_ratio = 1.,
   landmarks_sampling_ratio = 1.,
@@ -50,14 +50,14 @@ TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
 
 -- tune this value to the amount of samples (i think revolutions) to average over
 --before estimating te position of the walls and features in the environment
-TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 1
+TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 5
 
 --use or not use IMU, if used, the tracking_frame should be set to the one that the IMU is on
 TRAJECTORY_BUILDER_2D.use_imu_data = false
 
 --bandpass filter for lidar distance measurements
-TRAJECTORY_BUILDER_2D.min_range = 0.3
-TRAJECTORY_BUILDER_2D.max_range = 10.
+TRAJECTORY_BUILDER_2D.min_range = 0.35
+TRAJECTORY_BUILDER_2D.max_range = 12.
 TRAJECTORY_BUILDER_2D.max_z = .1
 TRAJECTORY_BUILDER_2D.min_z = -.1
 
@@ -80,9 +80,9 @@ TRAJECTORY_BUILDER_2D.imu_gravity_time_constant = 10.
 --Setting POSE_GRAPH.optimize_every_n_nodes to 0 is a handy way
 --to disable global SLAM and concentrate on the behavior of local SLAM.
 --This is usually one of the first thing to do to tune Cartographer.
-POSE_GRAPH.optimize_every_n_nodes = 90. --90 default
-POSE_GRAPH.optimization_problem.odometry_rotation_weight = 10
-POSE_GRAPH.optimization_problem.odometry_translation_weight = 1.
+POSE_GRAPH.optimize_every_n_nodes = 0. --90 default
+POSE_GRAPH.optimization_problem.odometry_rotation_weight = 40
+POSE_GRAPH.optimization_problem.odometry_translation_weight = 40.
 POSE_GRAPH.optimization_problem.fixed_frame_pose_translation_weight = 1e-1
 POSE_GRAPH.optimization_problem.fixed_frame_pose_rotation_weight = 1e-1
 

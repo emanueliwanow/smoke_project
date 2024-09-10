@@ -7,8 +7,8 @@ import time
 import copy
 from mavbase.MAV import MAV
 from sensor_msgs.msg import LaserScan
-from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import PoseStamped, Pose
+from nav_msgs.msg import OccupancyGrid, Path
+from geometry_msgs.msg import PoseStamped, Pose , PoseWithCovarianceStamped
 from itertools import product
 
 
@@ -39,17 +39,25 @@ class BSA:
 
         self.debug_grid = OccupancyGrid()
 
+        self.astar_path = Path()
+        self.astar_initial = PoseWithCovarianceStamped()
+        self.astar_goal = PoseStamped()
+
         self.obstacle = 100
         self.visited = 50
         self.free = 0
         self.unknown = -1
 
-        self.x = 0
-        self.y = 0
+        self.x,self.y = int(self.map_size/2),int(self.map_size/2)
 
-        self.obstacle_th = 10
+        self.obstacle_th = 40
 
-        
+        self.astar_initial_pub = rospy.Publisher('/initialpose', PoseWithCovarianceStamped, queue_size = 5)
+        self.astar_goal_pub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size = 5)
+
+
+        self.astar_path_sub = rospy.Subscriber('/nav_path', Path, self.AstarPathCallback)
+
 
 
         self.og_pub = rospy.Publisher('/scanned_area', OccupancyGrid, queue_size = 5)
@@ -75,6 +83,9 @@ class BSA:
     
     def GridCallback(self, grid_data):
         self.cartographer_grid = grid_data
+    
+    def AstarPathCallback(self, path_data):
+        self.astar_path = path_data
 
     def get_costmap_x_y(self,grid, world_x, world_y):
         costmap_x = int(
@@ -427,11 +438,21 @@ class BSA:
         # Backtracking without obstacle avoidance
         goal_x,goal_y,cost = self.get_closest_cell_arbitrary_cost(x,y,grid)
         if goal_x != -1:
+            self.astar_goal.pose.position.x = self.position_x + self.cell_grid.info.resolution*(goal_x-self.x)
+            self.astar_goal.pose.position.y = self.position_y + self.cell_grid.info.resolution*(goal_y-self.y)
+            self.astar_initial.pose.pose.position.x = self.position_x
+            self.astar_initial.pose.pose.position.y = self.position_y
+            self.astar_goal_pub.publish(self.astar_goal)
+            self.astar_initial_pub.publish(self.astar_initial)
+            
+
+
             self.position_x = self.position_x + self.cell_grid.info.resolution*(goal_x-self.x)
             self.position_y = self.position_y + self.cell_grid.info.resolution*(goal_y-self.y)
             self.x = goal_x
             self.y = goal_y
-            self.mav.set_position_with_yaw(self.position_x,self.position_y,self.altitude)
+            self.mav.hold(1)
+            self.mav.follow_path(self.astar_path,self.altitude)
             return True
         else:
             return False
@@ -440,7 +461,6 @@ class BSA:
     def BSA_loop(self):
         self.state = 1 
         surroundings = self.check_surroundings_2()
-        self.x,self.y = self.get_costmap_x_y(self.cell_grid,self.position_x,self.position_y)
         self.update_cellmap_3(self.x,self.y,surroundings)
         self.og_pub.publish(self.cell_grid)
 
@@ -500,7 +520,7 @@ class BSA:
             self.rate.sleep()
         self.mav.takeoff_and_keep_yaw(self.takeoff_alt)
         self.mav.set_position_with_yaw(self.position_x,self.position_y,self.altitude)
-        #self.mav.hold(1)
+        self.mav.hold(5)
         rospy.loginfo("Takeoff finished")     
         self.BSA_loop()  
         self.mav.land()
