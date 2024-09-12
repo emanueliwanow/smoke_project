@@ -39,7 +39,7 @@ class BSA:
 
         self.debug_grid = OccupancyGrid()
 
-        self.astar_path = Path()
+        self.astar_path = None
         self.astar_initial = PoseWithCovarianceStamped()
         self.astar_goal = PoseStamped()
 
@@ -55,8 +55,8 @@ class BSA:
         self.astar_initial_pub = rospy.Publisher('/initialpose', PoseWithCovarianceStamped, queue_size = 5)
         self.astar_goal_pub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size = 5)
 
-
         self.astar_path_sub = rospy.Subscriber('/nav_path', Path, self.AstarPathCallback)
+        self.astar_stamp = 0
 
 
 
@@ -86,6 +86,24 @@ class BSA:
     
     def AstarPathCallback(self, path_data):
         self.astar_path = path_data
+    
+    def AstarGetPath(self,inital_pose,goal):
+        
+        self.astar_goal_pub.publish(self.astar_goal)
+        self.astar_initial_pub.publish(self.astar_initial)
+        self.astar_stamp +=1
+        self.mav.hold(0.4)
+        if self.astar_path == None:
+            flag = 0
+        else:
+            if (self.astar_path.header.seq+1) == self.astar_stamp:
+                flag = 1
+            else: 
+                rospy.logwarn("Could not find a path")
+                self.astar_stamp = self.astar_path.header.seq
+                flag = 0
+        
+        return self.astar_path,flag
 
     def get_costmap_x_y(self,grid, world_x, world_y):
         costmap_x = int(
@@ -121,20 +139,7 @@ class BSA:
                 "Coordinates out of gridmap, x: {}, y: {} must be in between: [0, {}], [0, {}]".format(
                     x, y, grid.info.height, grid.info.width))
 
-    def get_closest_cell_arbitrary_cost(self, x, y, grid, cost_threshold=10, max_radius=50, bigger_than=False):
-
-        # Check the actual goal cell
-        try:
-            cost = self.get_cost_from_costmap_x_y(x, y,grid)
-        except IndexError:
-            return None
-
-        if bigger_than:
-            if cost > cost_threshold and cost != -1:
-                return x, y, cost
-        else:
-            if cost < cost_threshold and cost != -1:
-                return x, y, cost
+    def get_closest_cell_withAstar(self, x, y, grid, desired_cost = 0, max_radius=50):
 
         def create_radial_offsets_coords(radius):
             """
@@ -163,7 +168,10 @@ class BSA:
                         yield (i, j)
 
         coords_to_explore = create_radial_offsets_coords(max_radius)
-
+        shortest_path = None
+        lenght = 0
+        goal_x = 0
+        goal_y = 0
         for idx, radius_coords in enumerate(coords_to_explore):
             # for coords in radius_coords:
             tmp_x, tmp_y = radius_coords
@@ -175,15 +183,34 @@ class BSA:
             # If accessing out of grid, just ignore
             except IndexError:
                 pass
-            if bigger_than:
-                if cost > cost_threshold and cost != -1:
-                    return x + tmp_x, y + tmp_y, cost
+             
+            if int(cost) == int(desired_cost):
+                self.astar_goal.pose.position.x = self.position_x + self.cell_grid.info.resolution*(tmp_x)
+                self.astar_goal.pose.position.y = self.position_y + self.cell_grid.info.resolution*(tmp_y)
+                self.astar_initial.pose.pose.position.x = self.position_x
+                self.astar_initial.pose.pose.position.y = self.position_y
+                path,flag = self.AstarGetPath(self.astar_initial,self.astar_goal)
+                if flag:
+                    temp_lenght = 0 
+                    for i in range(len(path.poses)-1):
+                        temp_lenght += math.sqrt(pow((path.poses[i+1].pose.position.x - path.poses[i].pose.position.x),2) + pow((path.poses[i+1].pose.position.y - path.poses[i].pose.position.y), 2))
+                    if shortest_path == None:
+                        shortest_path = path
+                        lenght = temp_lenght
+                        goal_x = x+tmp_x
+                        goal_y = y+tmp_y
+                    else:
+                        if temp_lenght < lenght:
+                            shortest_path = path
+                            lenght = temp_lenght
+                            goal_x = x+tmp_x
+                            goal_y = y+tmp_y
 
-            else:
-                if cost < cost_threshold and cost != -1:
-                    return x + tmp_x, y + tmp_y, cost
+        return shortest_path,goal_x,goal_y
 
-        return -1, -1, -1
+            
+
+        
 
        
     def update_cellmap(self,world_x,world_y,surroundings):
@@ -234,6 +261,27 @@ class BSA:
     def update_cellmap_3(self,x,y,surroundings):
         self.cell_grid.data[x+((y)*self.cell_grid.info.width)] = self.visited
         #rospy.loginfo(f'Center in x:{x} , y:{y}')
+        if self.state == 0:
+            if not self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] == self.visited:
+                if surroundings[0]:
+                    self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[1]:
+                    self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] == self.visited:
+                if surroundings[2]:
+                    self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x-1+((y)*self.cell_grid.info.width)] = self.free
+            if not self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)]  == self.visited:
+                if surroundings[3]:
+                    self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.obstacle
+                else:
+                    self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.free
         if self.state == 1:
             if not self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] == self.visited:
                 if surroundings[0]:
@@ -436,35 +484,26 @@ class BSA:
 
     def backtracking(self,x,y,grid):
         # Backtracking without obstacle avoidance
-        goal_x,goal_y,cost = self.get_closest_cell_arbitrary_cost(x,y,grid)
-        if goal_x != -1:
-            self.astar_goal.pose.position.x = self.position_x + self.cell_grid.info.resolution*(goal_x-self.x)
-            self.astar_goal.pose.position.y = self.position_y + self.cell_grid.info.resolution*(goal_y-self.y)
-            self.astar_initial.pose.pose.position.x = self.position_x
-            self.astar_initial.pose.pose.position.y = self.position_y
-            self.astar_goal_pub.publish(self.astar_goal)
-            self.astar_initial_pub.publish(self.astar_initial)
-            
-
-
+        shortest_path,goal_x,goal_y = self.get_closest_cell_withAstar(x,y,grid)
+        if shortest_path != None: 
             self.position_x = self.position_x + self.cell_grid.info.resolution*(goal_x-self.x)
             self.position_y = self.position_y + self.cell_grid.info.resolution*(goal_y-self.y)
             self.x = goal_x
             self.y = goal_y
             self.mav.hold(1)
-            self.mav.follow_path(self.astar_path,self.altitude)
+            self.mav.follow_path(shortest_path,self.altitude)
             return True
         else:
             return False
 
 
     def BSA_loop(self):
-        self.state = 1 
+        self.state = 0 
         surroundings = self.check_surroundings_2()
         self.update_cellmap_3(self.x,self.y,surroundings)
-        self.og_pub.publish(self.cell_grid)
+        self.state = 1
 
-        while all(i==0 for i in surroundings) and not rospy.is_shutdown():  
+        while not surroundings[0] and not rospy.is_shutdown():  
             self.state = 1          
             self.move()
             self.mav.hold(1)
@@ -472,7 +511,7 @@ class BSA:
             self.update_cellmap_3(self.x,self.y,surroundings)
             
         self.state = 2
-        self.move()
+        #self.move()
         while not rospy.is_shutdown():
             surroundings = self.check_surroundings_2()
             rospy.loginfo(f'State: {self.state}')
@@ -483,8 +522,11 @@ class BSA:
                 rospy.loginfo("Spiral end detected")
                 rospy.loginfo("Attempting to backtrack")
                 backtrack = self.backtracking(self.x,self.y,self.cell_grid)
+                self.state = 0
                 surroundings = self.check_surroundings_2()
                 self.update_cellmap_3(self.x,self.y,surroundings)
+                self.state = 1
+                surroundings = self.check_surroundings_2()
                 if not backtrack:
                     rospy.loginfo("Finished exploration")
                     break

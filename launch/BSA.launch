@@ -5,7 +5,7 @@
     <node pkg="astar" type="astar" name="astar" output="screen">
         <param name="Euclidean" value="true"/>
         <param name="OccupyThresh" value="-1"/>
-        <param name="InflateRadius" value="0.40"/>
+        <param name="InflateRadius" value="0.35"/>
         <param name="rate" value="10"/>
     </node>
 </launch>
