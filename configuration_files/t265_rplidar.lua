@@ -50,7 +50,7 @@ TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
 
 -- tune this value to the amount of samples (i think revolutions) to average over
 --before estimating te position of the walls and features in the environment
-TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 5
+TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 3
 
 --use or not use IMU, if used, the tracking_frame should be set to the one that the IMU is on
 TRAJECTORY_BUILDER_2D.use_imu_data = false
@@ -60,6 +60,7 @@ TRAJECTORY_BUILDER_2D.min_range = 0.35
 TRAJECTORY_BUILDER_2D.max_range = 12.
 TRAJECTORY_BUILDER_2D.max_z = .1
 TRAJECTORY_BUILDER_2D.min_z = -.1
+TRAJECTORY_BUILDER_2D.missing_data_ray_length = 12
 
 --This is the scan matcher and the weights to different assumptions
 --occupied_space gives more weight to the 'previous' features detected.

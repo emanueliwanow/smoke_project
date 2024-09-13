@@ -16,12 +16,13 @@ class BSA:
     def __init__(self):
         self.scan = LaserScan()
         self.occupancy_grid = OccupancyGrid()
-        self.map_size = 50
+        self.map_size = 60
         self.rate = rospy.Rate(60)
         self.scan = LaserScan()
         self.costmapPose_x = 0
         self.costmapPose_y = 0
         self.state = 0 # 0:START 1:FORWARD 2:RIGHT 3:BACKWARDS 4:LEFT 5:END
+        self.seconds = rospy.get_time()
 
         self.mav = MAV("1")
         self.takeoff_alt = 1        
@@ -30,7 +31,7 @@ class BSA:
         self.position_y = copy.deepcopy(self.mav.drone_pose.pose.position.y)
 
         self.cell_origin = Pose()
-        self.cell_resolution = 0.8
+        self.cell_resolution = 0.9
         self.cell_origin.position.x = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_x
         self.cell_origin.position.y = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_y
         self.cell_grid = OccupancyGrid()
@@ -40,6 +41,7 @@ class BSA:
         self.debug_grid = OccupancyGrid()
 
         self.astar_path = None
+        self.astar_oldPath = None
         self.astar_initial = PoseWithCovarianceStamped()
         self.astar_goal = PoseStamped()
 
@@ -88,20 +90,17 @@ class BSA:
         self.astar_path = path_data
     
     def AstarGetPath(self,inital_pose,goal):
-        
+        self.astar_oldPath = self.astar_path
+        time = rospy.get_time()
         self.astar_goal_pub.publish(self.astar_goal)
         self.astar_initial_pub.publish(self.astar_initial)
-        self.astar_stamp +=1
-        self.mav.hold(0.4)
-        if self.astar_path == None:
+        while (self.astar_oldPath == self.astar_path) and (rospy.get_time()-time) < 1:         
+            self.mav.hold(0.001)
+        if (self.astar_oldPath == self.astar_path):
+            rospy.logwarn("Could not find a path")
             flag = 0
         else:
-            if (self.astar_path.header.seq+1) == self.astar_stamp:
-                flag = 1
-            else: 
-                rospy.logwarn("Could not find a path")
-                self.astar_stamp = self.astar_path.header.seq
-                flag = 0
+            flag = 1                
         
         return self.astar_path,flag
 
@@ -514,10 +513,10 @@ class BSA:
         #self.move()
         while not rospy.is_shutdown():
             surroundings = self.check_surroundings_2()
-            rospy.loginfo(f'State: {self.state}')
-            rospy.loginfo(f'Obstacles: {surroundings}')
-
             self.update_cellmap_3(self.x,self.y,surroundings)
+            #rospy.loginfo(f'State: {self.state}')
+            #rospy.loginfo(f'Obstacles: {surroundings}')
+            
             if surroundings == [1,1,0,1]:
                 rospy.loginfo("Spiral end detected")
                 rospy.loginfo("Attempting to backtrack")
@@ -536,9 +535,8 @@ class BSA:
                 self.move()
                 surroundings = self.check_surroundings_2()
                 self.update_cellmap_3(self.x,self.y,surroundings)
-                rospy.loginfo(f'State: {self.state}')
-                rospy.loginfo(f'Obstacles: {surroundings}')
-            if surroundings[0]:
+
+            elif surroundings[0]:
                 self.turn_right()
             else:
                 self.move()
@@ -566,7 +564,8 @@ class BSA:
         rospy.loginfo("Takeoff finished")     
         self.BSA_loop()  
         self.mav.land()
-        self.mav._disarm()          
+        self.mav._disarm() 
+        rospy.loginfo(f"Seconds used: {(rospy.get_time() - self.seconds)}")         
         
             
 
