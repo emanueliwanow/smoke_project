@@ -9,7 +9,7 @@
           -configuration_basename $(arg config_file)">
       <!-- remap the topics for cartographer to find them -->
     <remap from="imu"  to="/mavros/imu/data_raw" />
-    <remap from="odom" to="/mavros/odometry/in"/>
+    <remap from="odom" to="/mavros/local_position/odom"/>
   </node>
 
   <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"

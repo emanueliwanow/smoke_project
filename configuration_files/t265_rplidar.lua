@@ -50,7 +50,7 @@ TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
 
 -- tune this value to the amount of samples (i think revolutions) to average over
 --before estimating te position of the walls and features in the environment
-TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 3
+TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 15
 
 --use or not use IMU, if used, the tracking_frame should be set to the one that the IMU is on
 TRAJECTORY_BUILDER_2D.use_imu_data = false
@@ -83,7 +83,7 @@ TRAJECTORY_BUILDER_2D.imu_gravity_time_constant = 10.
 --This is usually one of the first thing to do to tune Cartographer.
 POSE_GRAPH.optimize_every_n_nodes = 0. --90 default
 POSE_GRAPH.optimization_problem.odometry_rotation_weight = 40
-POSE_GRAPH.optimization_problem.odometry_translation_weight = 40.
+POSE_GRAPH.optimization_problem.odometry_translation_weight = 300.
 POSE_GRAPH.optimization_problem.fixed_frame_pose_translation_weight = 1e-1
 POSE_GRAPH.optimization_problem.fixed_frame_pose_rotation_weight = 1e-1
 

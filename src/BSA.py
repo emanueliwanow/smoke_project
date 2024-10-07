@@ -16,7 +16,7 @@ class BSA:
     def __init__(self):
         self.scan = LaserScan()
         self.occupancy_grid = OccupancyGrid()
-        self.map_size = 60
+        self.map_size = 300
         self.rate = rospy.Rate(60)
         self.scan = LaserScan()
         self.costmapPose_x = 0
@@ -27,11 +27,11 @@ class BSA:
         self.mav = MAV("1")
         self.takeoff_alt = 1        
         self.altitude = 1 
-        self.position_x = copy.deepcopy(self.mav.drone_pose.pose.position.x)
-        self.position_y = copy.deepcopy(self.mav.drone_pose.pose.position.y)
+        self.position_x = 0#copy.deepcopy(self.mav.drone_pose.pose.position.x)
+        self.position_y = 0#copy.deepcopy(self.mav.drone_pose.pose.position.y)
 
         self.cell_origin = Pose()
-        self.cell_resolution = 0.9
+        self.cell_resolution = 0.90
         self.cell_origin.position.x = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_x
         self.cell_origin.position.y = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_y
         self.cell_grid = OccupancyGrid()
@@ -52,7 +52,7 @@ class BSA:
 
         self.x,self.y = int(self.map_size/2),int(self.map_size/2)
 
-        self.obstacle_th = 40
+        self.obstacle_th = 60
 
         self.astar_initial_pub = rospy.Publisher('/initialpose', PoseWithCovarianceStamped, queue_size = 5)
         self.astar_goal_pub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size = 5)
@@ -60,7 +60,8 @@ class BSA:
         self.astar_path_sub = rospy.Subscriber('/nav_path', Path, self.AstarPathCallback)
         self.astar_stamp = 0
 
-
+        self.cartographer_pose_sub = rospy.Subscriber('/tracked_pose', PoseStamped, self.CartographerPoseCallback)
+        self.cartographer_pose = PoseStamped()
 
         self.og_pub = rospy.Publisher('/scanned_area', OccupancyGrid, queue_size = 5)
 
@@ -80,6 +81,9 @@ class BSA:
         self.cell_grid.info.origin.position.y = self.cell_origin.position.y
         self.cell_grid.data = [self.unknown for i in range(self.map_size**2)]
 
+    def CartographerPoseCallback(self,data):
+        self.cartographer_pose = data
+
     def ScanCallback(self, scan_data):
         self.scan = scan_data
     
@@ -94,7 +98,7 @@ class BSA:
         time = rospy.get_time()
         self.astar_goal_pub.publish(self.astar_goal)
         self.astar_initial_pub.publish(self.astar_initial)
-        while (self.astar_oldPath == self.astar_path) and (rospy.get_time()-time) < 1:         
+        while (self.astar_oldPath == self.astar_path) and (rospy.get_time()-time) < 1.5:         
             self.mav.hold(0.001)
         if (self.astar_oldPath == self.astar_path):
             rospy.logwarn("Could not find a path")
@@ -207,57 +211,8 @@ class BSA:
 
         return shortest_path,goal_x,goal_y
 
-            
 
-        
-
-       
-    def update_cellmap(self,world_x,world_y,surroundings):
-        x,y = self.get_costmap_x_y(self.cell_grid,world_x,world_y)
-        self.cell_grid.data[x+((y)*self.cell_grid.info.width)] = self.visited
-        rospy.loginfo(f'Center in x:{x} , y:{y}')
-        if surroundings[0]:
-            self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] = self.obstacle
-        else:
-            self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] = self.free
-        if surroundings[1]:
-            self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.obstacle
-        else:
-            self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.free
-        if surroundings[2]:
-            self.cell_grid.data[x-1+(y*self.cell_grid.info.width)] = self.obstacle
-        else:
-            self.cell_grid.data[x-1+(y*self.cell_grid.info.width)] = self.free
-        if surroundings[3]:
-            self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.obstacle
-        else:
-            self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.free
-
-    def update_cellmap_2(self,x,y,surroundings):
-        self.cell_grid.data[x+((y)*self.cell_grid.info.width)] = self.visited
-        rospy.loginfo(f'Center in x:{x} , y:{y}')
-        if self.state == 0 or not self.state == 3: 
-            if surroundings[0]:
-                self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] = self.obstacle
-            else:
-                self.cell_grid.data[x+1+(y*self.cell_grid.info.width)] = self.free
-        if self.state == 0 or not self.state == 4:
-            if surroundings[1]:
-                self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.obstacle
-            else:
-                self.cell_grid.data[x+((y-1)*self.cell_grid.info.width)] = self.free
-        if self.state == 0 or not self.state == 1:
-            if surroundings[2]:
-                self.cell_grid.data[x-1+(y*self.cell_grid.info.width)] = self.obstacle
-            else:
-                self.cell_grid.data[x-1+(y*self.cell_grid.info.width)] = self.free
-        if self.state == 0 or not self.state == 2:
-            if surroundings[3]:
-                self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.obstacle
-            else:
-                self.cell_grid.data[x+((y+1)*self.cell_grid.info.width)] = self.free
-
-    def update_cellmap_3(self,x,y,surroundings):
+    def update_cellmap(self,x,y,surroundings):
         self.cell_grid.data[x+((y)*self.cell_grid.info.width)] = self.visited
         #rospy.loginfo(f'Center in x:{x} , y:{y}')
         if self.state == 0:
@@ -351,15 +306,6 @@ class BSA:
         
 
     def check_surroundings(self):
-        number_of_scans = len(self.scan.ranges)
-        increment = number_of_scans//4
-        back = (self.scan.ranges[0] < (3/2)*self.cell_resolution)
-        front = (self.scan.ranges[increment*2] < (3/2)*self.cell_resolution)
-        left = (self.scan.ranges[increment*3] < (3/2)*self.cell_resolution)
-        right = (self.scan.ranges[increment] < (3/2)*self.cell_resolution)
-        return [front,right,back,left]
-
-    def check_surroundings_2(self):
         
         index = self.get_costmap_index(self.cartographer_grid,self.position_x,self.position_y)
         num_cell = int(self.cell_grid.info.resolution/round(self.cartographer_grid.info.resolution,5))
@@ -498,22 +444,22 @@ class BSA:
 
     def BSA_loop(self):
         self.state = 0 
-        surroundings = self.check_surroundings_2()
-        self.update_cellmap_3(self.x,self.y,surroundings)
+        surroundings = self.check_surroundings()
+        self.update_cellmap(self.x,self.y,surroundings)
         self.state = 1
 
         while not surroundings[0] and not rospy.is_shutdown():  
             self.state = 1          
             self.move()
             self.mav.hold(1)
-            surroundings = self.check_surroundings_2()
-            self.update_cellmap_3(self.x,self.y,surroundings)
+            surroundings = self.check_surroundings()
+            self.update_cellmap(self.x,self.y,surroundings)
             
         self.state = 2
         #self.move()
         while not rospy.is_shutdown():
-            surroundings = self.check_surroundings_2()
-            self.update_cellmap_3(self.x,self.y,surroundings)
+            surroundings = self.check_surroundings()
+            self.update_cellmap(self.x,self.y,surroundings)
             #rospy.loginfo(f'State: {self.state}')
             #rospy.loginfo(f'Obstacles: {surroundings}')
             
@@ -522,10 +468,10 @@ class BSA:
                 rospy.loginfo("Attempting to backtrack")
                 backtrack = self.backtracking(self.x,self.y,self.cell_grid)
                 self.state = 0
-                surroundings = self.check_surroundings_2()
-                self.update_cellmap_3(self.x,self.y,surroundings)
+                surroundings = self.check_surroundings()
+                self.update_cellmap(self.x,self.y,surroundings)
                 self.state = 1
-                surroundings = self.check_surroundings_2()
+                surroundings = self.check_surroundings()
                 if not backtrack:
                     rospy.loginfo("Finished exploration")
                     break
@@ -533,8 +479,8 @@ class BSA:
             if not surroundings[3]:
                 self.turn_left()
                 self.move()
-                surroundings = self.check_surroundings_2()
-                self.update_cellmap_3(self.x,self.y,surroundings)
+                surroundings = self.check_surroundings()
+                self.update_cellmap(self.x,self.y,surroundings)
 
             elif surroundings[0]:
                 self.turn_right()
@@ -542,15 +488,6 @@ class BSA:
                 self.move()
 
             
-                
-
-
-
-
-        
-
-
-    
 
 
     def main(self):   

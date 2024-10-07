@@ -1,0 +1,12 @@
+<launch>
+    <rosparam command="load" file="$(find mavbase)/config/mavros_params.yaml"/>
+    <param name="/vel_topic" value="/mavros/setpoint_velocity/cmd_vel"/>
+    <node pkg="smoke_project" name="SmokeSensorRecognition" type="SmokeSensorRecognition.py" output="screen"/>
+    <node pkg="smoke_project" name="improvedBSA" type="improvedBSA.py" output="screen"/>
+    <node pkg="astar" type="astar" name="astar" output="screen">
+        <param name="Euclidean" value="true"/>
+        <param name="OccupyThresh" value="-1"/>
+        <param name="InflateRadius" value="0.4"/>
+        <param name="rate" value="10"/>
+    </node>
+</launch>
