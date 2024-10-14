@@ -1,0 +1,10 @@
+<launch>
+    <arg name="map_file" default="$(find smoke_project)/worlds/sos_lab/map.yaml"/>
+
+    <!-- Run the map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find smoke_project)/rviz/config2.rviz" />
+    <node pkg="smoke_project" name="SmokeSensorRecognition" type="SmokeSensorRecognition.py" output="screen"/>
+    
+</launch>
