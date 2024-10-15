@@ -12,7 +12,8 @@ from itertools import product
 from astar.srv import astar_srv
 from std_srvs.srv import Trigger
 
-POSITIONS = [[10,5],[3.1, 34.6], [15.9, 70.1], [25.1, 30.2]]
+POSITIONS = [[10,5]]
+#,[3.1, 34.6], [15.9, 70.1], [25.1, 30.2]]
 
 
 class BSA:

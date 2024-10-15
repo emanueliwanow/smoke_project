@@ -12,13 +12,15 @@ from onlySimulationBSA import BSA
 from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
 
-POSITIONS = [[10,5],[3.1, 34.6], [15.9, 70.1], [25.1, 30.2]]
+POSITIONS = [[10,5]]
+#,[3.1, 34.6], [15.9, 70.1], [25.1, 30.2]]
 
 class improvedBSA(BSA):
     def __init__(self,posX,posY):
         super().__init__(posX,posY)
         self.number_of_sensors = 3 #Number of sensor to inspect
         self.distance_apart = 3 #Assumption of minimal distance beetween two sensor
+        self.pixels_apart = 5
     
     def create_radial_offsets_coords(self,radius):
             coords = {}
@@ -36,7 +38,6 @@ class improvedBSA(BSA):
         self.cell_grid.data[(self.x)+((self.y)*self.cell_grid.info.width)] = self.visited
         self.og_pub.publish(self.cell_grid)
         self.rate.sleep()
-        print("X")
 
         for idx, radius_coords in enumerate(coords_to_explore):
             tmp_x, tmp_y = radius_coords            
@@ -55,6 +56,40 @@ class improvedBSA(BSA):
                 rospy.loginfo("Error")
                 rospy.loginfo(f'x: {tmp_x}, y: {tmp_y} Gridmap info:{self.cartographer_grid.info} index: {self.index}')
                 pass
+    def flood_fill(self):
+        queue = [(0, 0, 0)] # (x, y, distance)
+        while queue:
+            tmp_x, tmp_y, distance = queue.pop(0)
+            
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                new_tmp_x,new_tmp_y = tmp_x+dx,tmp_y+dy
+                if self.check_for_obstacle_cell(self.cell_grid,self.cartographer_grid,new_tmp_x,new_tmp_y,self.position_x,self.position_y):
+                    self.cell_grid.data[(self.x+new_tmp_x)+((self.y+new_tmp_y)*self.cell_grid.info.width)] = self.obstacle
+                if (self.cell_grid.data[(self.x+new_tmp_x)+((self.y+new_tmp_y)*self.cell_grid.info.width)] != self.visited and
+                    self.cell_grid.data[(self.x+new_tmp_x)+((self.y+new_tmp_y)*self.cell_grid.info.width)] != self.obstacle and 
+                    distance<self.pixels_apart and 
+                    self.distance([0,0],[new_tmp_x*self.cell_resolution,new_tmp_y*self.cell_resolution])<self.distance_apart):
+                    self.cell_grid.data[(self.x+new_tmp_x)+((self.y+new_tmp_y)*self.cell_grid.info.width)] = self.visited
+                    queue.append((new_tmp_x, new_tmp_y, distance + 1))
+                if (self.cell_grid.data[(self.x+new_tmp_x)+((self.y+new_tmp_y)*self.cell_grid.info.width)] != self.visited and
+                    self.cell_grid.data[(self.x+new_tmp_x)+((self.y+new_tmp_y)*self.cell_grid.info.width)] != self.obstacle and 
+                    distance<self.pixels_apart+1 and 
+                    self.distance([0,0],[new_tmp_x*self.cell_resolution,new_tmp_y*self.cell_resolution])<self.distance_apart+1):
+                    self.cell_grid.data[(self.x+new_tmp_x)+((self.y+new_tmp_y)*self.cell_grid.info.width)] = self.free
+            
+            self.og_pub.publish(self.cell_grid)
+            self.rate.sleep()
+        return
+
+    def distance(self,p1, p2):
+        """
+        Calculates the Euclidean distance between two points.
+        """
+        return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
+
+        
+        
+
     def check_for_sensor_improved(self):
         res = self.sensorDetection_srv.call()
         if res.success:
@@ -64,7 +99,7 @@ class improvedBSA(BSA):
                     if abs(self.sensor_positions[i][0]-self.position_x)<0.9 and abs(self.sensor_positions[i][1]-self.position_y)<0.9:
                         flag = 1
             if flag == 0:
-                self.expand_gridmap()
+                self.flood_fill()
                 #rospy.loginfo("New sensor detected")
                 self.sensor_positions.append([self.position_x,self.position_y])
                 #rospy.loginfo(f'Number of sensor detected: {len(self.sensor_positions)}')
@@ -95,6 +130,7 @@ class improvedBSA(BSA):
                 #rospy.loginfo("Spiral end detected")
                 #rospy.loginfo("Attempting to backtrack")
                 backtrack = self.backtracking(self.x,self.y,self.cell_grid)
+                self.check_for_sensor_improved()
                 self.state = 0
                 surroundings = self.check_surroundings_2()
                 self.update_cellmap(self.x,self.y,surroundings)
@@ -105,24 +141,25 @@ class improvedBSA(BSA):
                     break
                 
             if not surroundings[3]:
-                self.turn_left()
-                self.check_for_sensor_improved() 
+                self.turn_left() 
                 self.move()
+                self.check_for_sensor_improved()
                 surroundings = self.check_surroundings_2()
                 self.update_cellmap(self.x,self.y,surroundings)
 
             elif surroundings[0]:
                 self.turn_right()
             else:
-                self.check_for_sensor_improved() 
                 self.move()
+                self.check_for_sensor_improved()
 
     
     def improvedmain(self):   
         self.initialize_cell_grid()
         for i in range(100):
             self.og_pub.publish(self.cell_grid)
-            self.rate.sleep()     
+            self.rate.sleep()   
+        #self.flood_fill()  
         self.improvedBSA_loop()  
         rospy.loginfo("Finished")
         rospy.loginfo(f"Seconds used: {(rospy.get_time() - self.seconds)}")  
