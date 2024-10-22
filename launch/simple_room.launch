@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<launch>
-  <include file="$(find smoke_project)/launch/start_gazebo.launch">
-   <arg name="world" value="$(find smoke_project)/worlds/simple_room.world"/> 
-  </include>
-
-</launch>

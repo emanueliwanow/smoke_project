@@ -1,13 +1,15 @@
 <launch>
 
   <arg name="config_dir" default='/home/iwa9/catkin_ws/src/smoke_project/configuration_files'/>
-  <arg name="config_file" default='t265_rplidar.lua'/>
+  <arg name="config_file" default='t265_rplidar_sim.lua'/>
 
   <node name="cartographer_node" pkg="cartographer_ros"
       type="cartographer_node" args="
           -configuration_directory $(arg config_dir)
           -configuration_basename $(arg config_file)">
       <!-- remap the topics for cartographer to find them -->
+    <remap from="imu"  to="/mavros/imu/data_raw" />
+    <remap from="odom" to="/mavros/local_position/odom"/>
   </node>
 
   <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"

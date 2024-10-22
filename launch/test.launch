@@ -1,7 +1,0 @@
-<launch>
-    <remap from="/local_map/scan" to="/scan" />
-     <param name="/local_map/map_resolution" type="double" value="0.9" />
-     <param name="/local_map/map_width" type="double" value="10" />
-     <param name="/local_map/map_height" type="double" value="10" />
-    <node pkg="local_map" name="local_map" type="local_map" output="screen"/>
-</launch>

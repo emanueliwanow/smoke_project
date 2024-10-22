@@ -9,9 +9,9 @@ options = {
   map_builder = MAP_BUILDER,
   trajectory_builder = TRAJECTORY_BUILDER,
   map_frame = "map",
-  tracking_frame = "laser",
-  published_frame = "laser",
-  use_odometry = false,
+  tracking_frame = "base_link",
+  published_frame = "base_link",
+  use_odometry = true,
   provide_odom_frame = false,
   odom_frame = "base_link",
   publish_frame_projected_to_2d = false,
@@ -50,7 +50,7 @@ TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
 
 -- tune this value to the amount of samples (i think revolutions) to average over
 --before estimating te position of the walls and features in the environment
-TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 5
+TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 15
 
 --use or not use IMU, if used, the tracking_frame should be set to the one that the IMU is on
 TRAJECTORY_BUILDER_2D.use_imu_data = false
