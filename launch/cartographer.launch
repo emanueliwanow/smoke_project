@@ -8,7 +8,7 @@
   <param name="angle_compensate"    type="bool"   value="true"/>
   </node>
 
-  <arg name="config_dir" default='/home/iwa9/catkin_ws/src/smoke_project/configuration_files'/>
+  <arg name="config_dir" default='/home/dronelab/catkin_ws/src/smoke_project/configuration_files'/>
   <arg name="config_file" default='t265_rplidar.lua'/>
 
   <node name="cartographer_node" pkg="cartographer_ros"
