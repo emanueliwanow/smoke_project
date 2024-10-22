@@ -1,5 +1,13 @@
 <launch>
 
+  <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
+  <param name="serial_port"         type="string" value="/dev/ttyUSB0"/>
+  <param name="serial_baudrate"     type="int"    value="115200"/>
+  <param name="frame_id"            type="string" value="laser"/>
+  <param name="inverted"            type="bool"   value="false"/>
+  <param name="angle_compensate"    type="bool"   value="true"/>
+  </node>
+
   <arg name="config_dir" default='/home/iwa9/catkin_ws/src/smoke_project/configuration_files'/>
   <arg name="config_file" default='t265_rplidar.lua'/>
 
@@ -12,6 +20,7 @@
 
   <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
     type="cartographer_occupancy_grid_node" args="-resolution 0.03" />
+
 
   <node type="rviz" name="rviz" pkg="rviz" args="-d $(find smoke_project)/rviz/config.rviz" />
 
