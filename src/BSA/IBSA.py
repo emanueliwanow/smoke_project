@@ -8,14 +8,14 @@ import copy
 from nav_msgs.msg import OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, Pose , PoseWithCovarianceStamped
 from itertools import product
-from onlySimulationBSA import BSA
+from BSA import BSA
 from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
 
 POSITIONS = [[10,5]]
 #,[3.1, 34.6], [15.9, 70.1], [25.1, 30.2]]
 
-class improvedBSA(BSA):
+class IBSA(BSA):
     def __init__(self,posX,posY):
         super().__init__(posX,posY)
         self.number_of_sensors = 3 #Number of sensor to inspect
@@ -173,5 +173,5 @@ class improvedBSA(BSA):
 if __name__ == '__main__':
     rospy.init_node("BSA")
     for i in range(len(POSITIONS)):
-        bsa = improvedBSA(POSITIONS[i][0],POSITIONS[i][1])
+        bsa = IBSA(POSITIONS[i][0],POSITIONS[i][1])
         bsa.improvedmain()

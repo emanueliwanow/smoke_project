@@ -1,5 +1,5 @@
 # smoke_project
-Repository for implementing MPC control to stabilize a MAV.
+Repository for implementing a Online Coverage Path Planning for a quadrotor in order to find smoke detectors in a indoor space.
 
 
 ## Installing the PX4 Simulation 
