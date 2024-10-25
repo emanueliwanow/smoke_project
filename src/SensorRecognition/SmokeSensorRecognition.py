@@ -1,111 +1,125 @@
-#!/usr/bin/env python3
-import rospy
+#!/usr/bin/env python
 import numpy as np
-import math
+from ultralytics import YOLO
+import rospy
+from sensor_msgs.msg import Image as msg_Image
+from cv_bridge import CvBridge, CvBridgeError
+import sys
 import time
-import copy
-from geometry_msgs.msg import PoseStamped, Pose , PoseArray, PoseWithCovarianceStamped
-from std_msgs.msg import Bool
-from visualization_msgs.msg import MarkerArray, Marker
-from std_srvs.srv import Trigger
+import message_filters
+from std_msgs.msg import UInt16
+from std_msgs.msg import Int32MultiArray
+import cv2
+#np.set_printoptions(threshold=sys.maxsize)
 
 
-class SmokeSensorRecognition:
-    def __init__(self):
-        # For the hole lab
-        #self.sensor_positions = [[8.5, 3.4], [8.6, 7.4], [8.6, 10.7], [8.6, 14.1], [8.6, 17.5], [8.6, 20.7], [8.7, 24.0], [8.6, 27.4], [8.6, 30.7], [8.5, 34.0], [13.1, 3.3], [15.9, 3.3], [19.0, 3.4], [15.8, 7.1], [15.8, 9.6], [13.6, 14.0], [13.4, 18.4], [17.9, 14.0], [17.8, 18.5], [15.7, 22.5], [15.5, 25.7], [15.5, 28.2], [15.5, 30.5], [15.5, 32.9], [15.4, 36.6], [15.4, 40.6], [15.5, 44.0], [15.4, 47.4], [22.4, 4.0], [25.6, 4.1], [24.0, 9.1], [24.1, 12.3], [23.6, 16.5], [22.7, 20.2], [22.6, 22.7], [22.7, 25.8], [22.7, 29.0], [22.7, 32.0], [29.8, 30.8], [29.8, 34.3], [29.9, 37.4], [29.7, 41.4], [29.5, 45.6], [29.5, 49.7], [29.5, 53.9], [29.4, 58.2], [22.5, 49.0], [22.3, 52.4], [22.3, 55.7], [22.4, 59.2], [22.6, 64.0], [28.1, 63.9], [20.3, 70.0], [25.6, 70.1], [33.1, 63.5], [35.9, 60.9], [39.7, 60.3], [39.5, 63.7], [31.1, 69.4], [34.8, 69.5], [40.3, 69.4], [43.0, 61.3], [46.3, 61.4], [49.6, 61.4], [44.6, 69.5], [48.0, 69.5], [51.2, 69.5], [53.1, 61.4], [53.8, 69.0], [56.4, 59.5], [59.5, 62.9], [58.9, 66.0], [54.4, 66.0], [49.4, 65.8], [43.8, 66.0], [37.6, 65.9], [31.9, 65.9], [25.9, 58.1], [25.9, 52.5], [22.3, 46.1], [26.1, 44.1], [26.1, 36.6], [19.1, 42.7], [19.0, 36.9], [19.0, 29.8], [19.0, 23.3], [12.0, 27.8]]
-        # For the SOS lab only
-        self.sensor_positions = [[4.8, 3.3], [4.7, 7.4], [4.8, 10.8], [4.8, 14.1], [4.7, 17.4], [4.7, 20.7], [4.7, 24.1], [4.7, 27.4], [4.7, 30.8], [4.7, 34.1], [9.3, 3.3], [14.0, 3.4], [12.0, 9.6], [12.0, 7.0], [8.2, 9.2], [9.1, 13.7], [9.1, 18.4], [13.9, 13.6], [14.1, 18.4], [11.6, 22.4], [11.6, 26.0], [11.6, 28.3], [11.6, 30.5], [8.0, 25.4], [11.2, 32.9], [11.6, 36.5], [11.6, 40.6], [11.4, 44.0], [11.6, 47.4], [20.0, 5.6], [20.2, 9.0], [20.5, 12.4], [19.7, 16.4], [19.4, 20.2], [18.8, 22.7], [18.9, 25.7], [18.9, 29.0], [15.2, 26.8], [18.7, 31.9], [15.1, 38.6], [18.3, 46.2], [18.4, 49.0], [18.6, 52.3], [18.7, 55.7], [18.4, 59.1], [18.8, 64.0], [25.1, 63.8], [16.0, 70.1], [25.6, 58.1], [25.7, 53.9], [25.7, 49.8], [25.5, 45.5], [25.6, 41.6], [25.9, 37.3], [25.8, 34.3], [25.8, 30.9], [22.2, 38.7]]
+class ImageListener:
+    def __init__(self, rgb_topic, depth_topic):
+        print("INIT")
+        start_loading_model = time.time() 
+        self.model = YOLO("/home/dronelab/Documents/thesis/ba/code/catkin_ws/src/drone_inspection_jetson/src/weights/30_06_2023_license_plate.pt") 
+        print("Model nach "+ str(time.time() - start_loading_model) + " sekunden geladen")
         
-        self.rate = rospy.Rate(60)
-        self.sensor_positions_pub = rospy.Publisher('/smoke_sensors_postions', PoseArray, queue_size = 5)
-        self.sensor_size = 0.45
-        self.drone_pose = PoseStamped()
-        self.drone_position_sub = rospy.Subscriber('/pose',PoseStamped, self.local_callback)
-        #rospy.wait_for_message('/mavros/local_position/pose',PoseStamped,timeout=5)
+        self.rgb_topic = rgb_topic
+        self.depth_topic = depth_topic
+        self.bridge = CvBridge()
+        rgb_sub = message_filters.Subscriber(rgb_topic, msg_Image)
+        depth_sub = message_filters.Subscriber(depth_topic, msg_Image)
+        ts = message_filters.TimeSynchronizer([rgb_sub, depth_sub], 10)
+        ts.registerCallback(self.image_bounding_boxes)
         
-        self.detection_srv = rospy.Service('/sensor_detection', Trigger, self.handleDetectionSrv)
+        #self.pub_depth_int = rospy.Publisher('depth_int', UInt16, queue_size=2)
+        self.pub_bouding_box = rospy.Publisher('bounding_boxes', Int32MultiArray, queue_size=2)  #Bounding Boxes vom Typ [x_min, y_min, x_max, y_max, x_center, y_center,depth_to_center]
+        self.pub_bb_image = rospy.Publisher('bb_license_plate_image', msg_Image, queue_size=2)  #Bounding Boxes vom Typ [x_min, y_min, x_max, y_max, x_center, y_center,depth_to_center]
 
-        self.localSmoke_sub = rospy.Subscriber('/initialpose',PoseWithCovarianceStamped,self.localSmoke_callback)
-        self.localSmoke = PoseWithCovarianceStamped()
+    def plot_results(self, result):
+        res_plotted = result[0].plot()
+        return res_plotted
 
-        self.marker_pub = rospy.Publisher('/marker', MarkerArray,queue_size=5)
-        self.id = 0
-        self.markerArray = MarkerArray()
+
+    def detect_img(self, img):
+        result = self.model(img, verbose=False, conf = 0.6)
+        return result
+
+    def get_center_of_box(self, box):
+        if len(box) == 0: 
+            return 0,0,0,0,0,0
+        box = box[0]
+        x_min = box[0].item()
+        y_min = box[1].item()
+        x_max = box[2].item()
+        y_max = box[3].item()
+
+        x_center = int(x_min+(x_max-x_min)/2)
+        y_center = int(y_min+(y_max-y_min)/2)
+
+      
+
+        #print("bonding_box: ", box)
+        #print("x_center: ", x_center)
+        #print("y_center: ", y_center)
+
         
-    def handleDetectionSrv(self,req):
-        flag = 0
-        for i in range(len(self.sensor_positions)):
-            if (abs(self.drone_pose.pose.position.x-self.sensor_positions[i][0])<self.sensor_size and
-                abs(self.drone_pose.pose.position.y-self.sensor_positions[i][1])<self.sensor_size):
-                flag = 1
-            
-        return flag, ""                
-            
+        return int(x_min), int(y_min), int(x_max), int(y_max), x_center,y_center
 
-    def localSmoke_callback(self,local):
-        self.localSmoke = local
-        marker = Marker()
-        marker.header.frame_id = "map"
-        marker.type = marker.SPHERE
-        marker.action = marker.ADD
-        marker.scale.x = 0.2
-        marker.scale.y = 0.2
-        marker.scale.z = 0.2
-        marker.color.a = 1.0
-        marker.color.r = 0.0
-        marker.color.g = 0.0
-        marker.color.b = 1.0
-        marker.pose.orientation.w = 1.0
-        marker.pose.position.x = self.localSmoke.pose.pose.position.x
-        marker.pose.position.y = self.localSmoke.pose.pose.position.y
-        marker.pose.position.z = 0
-        marker.id = self.id 
-        self.markerArray.markers.append(marker)
-        self.marker_pub.publish(self.markerArray)
-        self.id +=1
-        self.sensor_positions.append([round(self.localSmoke.pose.pose.position.x,1),round(self.localSmoke.pose.pose.position.y,1)])
-        print(self.sensor_positions)
+    def get_depth_data(self, aligned_depth_frame, x_center, y_center):
+        #depth = np.asanyarray(aligned_depth_frame.get_data())
+        if x_center == y_center == 0:
+            return 0
+        #print("ALLIGNED DEPTH FRAME:", aligned_depth_frame)
+        depth = aligned_depth_frame[y_center,x_center].astype(float)    #Setzt voraus, dass RGB und Depth Image von gleicher Dimension sind!!!
+        if np.isnan(depth):
+            return 0
+        print("DEPTH", depth)
 
-    def local_callback(self, local):
-        self.drone_pose = local
+        #depth = depth * 1000 #für Gazebo Simulation
+        print(depth)
+        print("depth before scale", depth)      
+        return int(depth)
 
-    
-    #def place_smokeSensor_loop(self):
+    def image_bounding_boxes(self, rgb_sub, depth_sub):
+        try:
+            #print("start: ", time.time())
+            cv_rgb_image = self.bridge.imgmsg_to_cv2(rgb_sub, rgb_sub.encoding)
+            cv_depth_image = self.bridge.imgmsg_to_cv2(depth_sub, depth_sub.encoding)
+
+            #print("\n")
+            #print(('Dimesnionen rgb image', cv_rgb_image.shape))
+
+            #print(('Dimesnionen depth image', cv_depth_image.shape))
+            a = time.time()
+            detected_img = self.detect_img(cv_rgb_image)
+            #print("detected_img: ", detected_img[0].boxes.xyxy)
+            #print("Es dauerte " + str(time.time()-a) + " sekunden für yolo um den frame zu detecten")
+            result_img = self.plot_results(detected_img)
+
+            bounding_boxes = detected_img[0].boxes.xyxy
+            print("bounding_boxes: ", bounding_boxes)
+            x_min, y_min, x_max, y_max, x_center, y_center = self.get_center_of_box(bounding_boxes)
+            result_img = cv2.circle(result_img, (x_center,y_center), radius=10, color=(0, 0, 255), thickness=-1)  #Nur für Sim Visualisierung
+            self.pub_bb_image.publish(self.bridge.cv2_to_imgmsg(result_img, encoding='rgb8'))  ###Bei Jetson Verion herausnehmen (nur zu visualisierungszwecken)
+
+            depth = self.get_depth_data(cv_depth_image, x_center, y_center)
+
+            #self.pub_depth_int.publish(depth)
+            array_msg = Int32MultiArray()
+            #print([type(x_min), type(y_min), type(x_max), type(y_max), type(x_center), type(y_center)])
+            array_msg.data = [x_min, y_min, x_max, y_max, x_center, y_center, depth]  # Example array values
+            self.pub_bouding_box.publish(array_msg)
+            #print("end: ", time.time())
 
 
-    def publishing_poses(self):
-        
-        
-        for i in range(len(self.sensor_positions)):
-            marker = Marker()
-            marker.header.frame_id = "map"
-            marker.type = marker.SPHERE
-            marker.action = marker.ADD
-            marker.scale.x = 0.2
-            marker.scale.y = 0.2
-            marker.scale.z = 0.2
-            marker.color.a = 1.0
-            marker.color.r = 0.0
-            marker.color.g = 0.0
-            marker.color.b = 1.0
-            marker.pose.orientation.w = 1.0
-            marker.pose.position.x = self.sensor_positions[i][0]
-            marker.pose.position.y = self.sensor_positions[i][1]
-            marker.pose.position.z = 0
-            marker.id = self.id 
-            self.markerArray.markers.append(marker)
-            self.marker_pub.publish(self.markerArray)
-            self.id +=1
-            
-    def main(self):
-        rospy.sleep(3)
-        rospy.loginfo(f'Number of sensors:{len(self.sensor_positions)}')
-        self.publishing_poses()
-        while not rospy.is_shutdown():            
-            self.rate.sleep()
+        except CvBridgeError as e:
+            print(e)
+            return
+
+
 
 if __name__ == '__main__':
-    rospy.init_node("SmokeSensorRecognition")
-    smoke = SmokeSensorRecognition()
-    smoke.main()
+    rospy.init_node("image_bounding_boxes")
+    #rgb_topic = '/camera/color/image_raw'  # check the depth image topic in your Gazebo environmemt and replace this with your
+    rgb_topic = '/d400/color/image_raw'
+    #depth_topic = '/camera/aligned_depth_to_color/image_raw'  # check the depth image topic in your Gazebo environmemt and replace this with your
+    depth_topic = '/d400/aligned_depth_to_color/image_raw'
+    listener = ImageListener(rgb_topic, depth_topic)
+    rospy.spin()

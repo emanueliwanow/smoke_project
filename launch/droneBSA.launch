@@ -1,4 +1,6 @@
 <launch>
+    <rosparam command="load" file="$(find mavbase)/config/mavros_params.yaml"/>
+    <param name="/vel_topic" value="/mavros/setpoint_velocity/cmd_vel"/>
     <node pkg="astar" type="astar" name="astar" output="screen">
         <param name="Euclidean" value="true"/>
         <param name="OccupyThresh" value="-1"/>

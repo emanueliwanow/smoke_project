@@ -20,6 +20,9 @@ class droneBSA(BSA):
         self.mav = MAV("1")
         self.takeoff_alt = 1        
         self.altitude = 1 
+        self.cell_resolution = 1.5
+        self.cell_origin.position.x = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_x
+        self.cell_origin.position.y = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_y
 
     def drone_get_closest_cell_withAstar(self, x, y, grid, desired_cost = 0, max_radius=80):
 
@@ -123,7 +126,7 @@ class droneBSA(BSA):
             self.position_y = self.position_y + self.cell_grid.info.resolution*(goal_y-self.y)
             self.x = goal_x
             self.y = goal_y
-            self.mav.follow_path(shortest_path)
+            self.mav.follow_path(shortest_path,self.altitude)
             return True
         else:
             return False
@@ -136,22 +139,20 @@ class droneBSA(BSA):
 
         while not surroundings[0] and not rospy.is_shutdown():  
             self.state = 1          
-            self.move()
+            self.drone_move()
             surroundings = self.check_surroundings_2()
             self.update_cellmap(self.x,self.y,surroundings)
             
-        self.state = 2
-        #self.move()
+        #self.state = 2
+        
         while not rospy.is_shutdown():
             surroundings = self.check_surroundings_2()
             self.update_cellmap(self.x,self.y,surroundings)
-            #rospy.loginfo(f'State: {self.state}')
-            #rospy.loginfo(f'Obstacles: {surroundings}')
+            
             
             if surroundings == [1,1,0,1]:
-                self.check_for_sensor() 
-                #rospy.loginfo("Spiral end detected")
-                #rospy.loginfo("Attempting to backtrack")
+                #self.check_for_sensor() 
+                
                 backtrack = self.drone_backtracking(self.x,self.y,self.cell_grid)
                 self.state = 0
                 surroundings = self.check_surroundings_2()
@@ -164,16 +165,16 @@ class droneBSA(BSA):
                 
             if not surroundings[3]:
                 self.turn_left()
-                self.check_for_sensor() 
-                self.move()
+                #self.check_for_sensor() 
+                self.drone_move()
                 surroundings = self.check_surroundings_2()
                 self.update_cellmap(self.x,self.y,surroundings)
 
             elif surroundings[0]:
                 self.turn_right()
             else:
-                self.check_for_sensor() 
-                self.move()
+                #self.check_for_sensor() 
+                self.drone_move()
 
     def droneMain(self):   
         self.initialize_cell_grid()
@@ -182,9 +183,9 @@ class droneBSA(BSA):
             self.rate.sleep()
         self.mav.takeoff_and_keep_yaw(self.takeoff_alt)
         self.mav.set_position_with_yaw(self.position_x,self.position_y,self.altitude)
-        self.mav.hold(5)
+        self.mav.hold(2)
         rospy.loginfo("Takeoff finished")     
-        self.BSA_loop()  
+        self.droneBSA_loop()  
         self.mav.land()
         self.mav._disarm() 
         rospy.loginfo(f"Seconds used: {(rospy.get_time() - self.seconds)}") 
@@ -199,9 +200,17 @@ class droneBSA(BSA):
         self.mav.hold(5)
         rospy.loginfo("Takeoff finished")  
         self.drone_go_front()
+        surroundings = self.check_surroundings_2()
+        self.update_cellmap(self.x,self.y,surroundings)
         self.drone_go_right()
+        surroundings = self.check_surroundings_2()
+        self.update_cellmap(self.x,self.y,surroundings)
         self.drone_go_back()
+        surroundings = self.check_surroundings_2()
+        self.update_cellmap(self.x,self.y,surroundings)
         self.drone_go_left()
+        surroundings = self.check_surroundings_2()
+        self.update_cellmap(self.x,self.y,surroundings)
         self.mav.land()
         self.mav._disarm()        
 
@@ -210,6 +219,6 @@ class droneBSA(BSA):
 
 if __name__ == '__main__':
     rospy.init_node("BSA")
-    bsa = BSA()
-    bsa.droneMainTestmain()
+    bsa = droneBSA()
+    bsa.droneMain()
     
