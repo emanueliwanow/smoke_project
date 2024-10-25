@@ -10,7 +10,7 @@
     <param name="publish_tf" value="false"/>
     <param name="fixed_frame_id" value="mocap"/>
     <rosparam param="model_list">[]</rosparam>
-    <remap from="/vicon/dronelab/odom" to="/odom"/>
+    <remap from="/vicon/dronelab/odom" to="/mavros/odometry/out"/>
   </node>
 
   </launch>
