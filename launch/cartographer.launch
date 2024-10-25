@@ -1,5 +1,7 @@
 <launch>
 
+  <node pkg="tf" type="static_transform_publisher" name="tf_laser_laserRotated"
+        args="0 0 0 3.141592 0 0 laser laser_rotated 1000"/>
   <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
   <param name="serial_port"         type="string" value="/dev/ttyUSB0"/>
   <param name="serial_baudrate"     type="int"    value="115200"/>
