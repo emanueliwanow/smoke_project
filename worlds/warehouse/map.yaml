@@ -1,0 +1,6 @@
+image: warehouse.png
+resolution: 0.06
+origin: [0.0, 0.0, 0.0]
+occupied_thresh: 0.2
+free_thresh: 0.196
+negate: 0
