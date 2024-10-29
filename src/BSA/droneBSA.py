@@ -20,7 +20,7 @@ class droneBSA(BSA):
         self.mav = MAV("1")
         self.takeoff_alt = 1        
         self.altitude = 1 
-        self.cell_resolution = 1.5
+        self.cell_resolution = 0.9
         self.cell_origin.position.x = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_x
         self.cell_origin.position.y = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_y
 
@@ -220,5 +220,5 @@ class droneBSA(BSA):
 if __name__ == '__main__':
     rospy.init_node("BSA")
     bsa = droneBSA()
-    bsa.droneMain()
+    bsa.droneMainTest()
     
