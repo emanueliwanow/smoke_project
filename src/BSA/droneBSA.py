@@ -21,6 +21,8 @@ class droneBSA(BSA):
         self.takeoff_alt = 1        
         self.altitude = 1 
         self.cell_resolution = 0.9
+        self.position_x = 0 #self.mav.drone_pose.pose.position.x
+        self.position_y = 0 #self.mav.drone_pose.pose.position.y
         self.cell_origin.position.x = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_x
         self.cell_origin.position.y = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_y
 
@@ -198,7 +200,9 @@ class droneBSA(BSA):
         self.mav.takeoff_and_keep_yaw(self.takeoff_alt)
         self.mav.set_position_with_yaw(self.position_x,self.position_y,self.altitude)
         self.mav.hold(5)
-        rospy.loginfo("Takeoff finished")  
+        rospy.loginfo("Takeoff finished") 
+        surroundings = self.check_surroundings_2()
+        self.update_cellmap(self.x,self.y,surroundings) 
         self.drone_go_front()
         surroundings = self.check_surroundings_2()
         self.update_cellmap(self.x,self.y,surroundings)
@@ -209,8 +213,6 @@ class droneBSA(BSA):
         surroundings = self.check_surroundings_2()
         self.update_cellmap(self.x,self.y,surroundings)
         self.drone_go_left()
-        surroundings = self.check_surroundings_2()
-        self.update_cellmap(self.x,self.y,surroundings)
         self.mav.land()
         self.mav._disarm()        
 

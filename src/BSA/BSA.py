@@ -80,6 +80,7 @@ class BSA:
         self.sensor_positions = []
 
         self.distance_traveled = 0
+        self.number_of_nodes = 0
         
 
 
@@ -509,6 +510,7 @@ class BSA:
         self.go_to(self.position_x,self.position_y)
         
     def move(self):
+        self.number_of_nodes+=1
         if self.state == 1:
             self.go_front()
         if self.state == 2:
@@ -559,6 +561,7 @@ class BSA:
 
     def backtracking(self,x,y,grid):
         # Backtracking without obstacle avoidance
+        self.number_of_nodes+=1
         shortest_path,goal_x,goal_y = self.get_closest_cell_withAstar(x,y,grid)
         if shortest_path != None: 
             self.position_x = self.position_x + self.cell_grid.info.resolution*(goal_x-self.x)
@@ -630,6 +633,7 @@ class BSA:
         self.BSA_loop()  
         rospy.loginfo("Finished")
         rospy.loginfo(f"Seconds used: {(rospy.get_time() - self.seconds)}")  
+        rospy.loginfo(f"Processing time per node: {(rospy.get_time() - self.seconds)/self.number_of_nodes}")
         rospy.loginfo(f'Sensors detected:{len(self.sensor_positions)}')
         
         for i in range(len(self.path.poses)-1):

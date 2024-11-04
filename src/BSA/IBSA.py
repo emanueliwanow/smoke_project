@@ -166,6 +166,7 @@ class IBSA(BSA):
         self.improvedBSA_loop()  
         rospy.loginfo("Finished")
         rospy.loginfo(f"Seconds used: {(rospy.get_time() - self.seconds)}")  
+        rospy.loginfo(f"Processing time per node: {(rospy.get_time() - self.seconds)/self.number_of_nodes}")
         rospy.loginfo(f'Sensors detected:{len(self.sensor_positions)}')
         
         for i in range(len(self.path.poses)-1):

@@ -82,7 +82,7 @@ TRAJECTORY_BUILDER_2D.imu_gravity_time_constant = 10.
 --to disable global SLAM and concentrate on the behavior of local SLAM.
 --This is usually one of the first thing to do to tune Cartographer.
 POSE_GRAPH.optimize_every_n_nodes = 0. --90 default
-POSE_GRAPH.optimization_problem.odometry_rotation_weight = 40
+POSE_GRAPH.optimization_problem.odometry_rotation_weight = 300
 POSE_GRAPH.optimization_problem.odometry_translation_weight = 300.
 POSE_GRAPH.optimization_problem.fixed_frame_pose_translation_weight = 1e-1
 POSE_GRAPH.optimization_problem.fixed_frame_pose_rotation_weight = 1e-1
