@@ -20,7 +20,7 @@ class droneBSA(BSA):
         self.mav = MAV("1")
         self.takeoff_alt = 1        
         self.altitude = 1 
-        self.cell_resolution = 0.9
+        self.cell_resolution = 1.5
         self.drone_position_x = self.mav.drone_pose.pose.position.x
         self.drone_position_y = self.mav.drone_pose.pose.position.y
         self.position_x = 0
@@ -28,7 +28,7 @@ class droneBSA(BSA):
         self.cell_origin.position.x = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_x
         self.cell_origin.position.y = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_y
 
-    def drone_get_closest_cell_withAstar(self, x, y, grid, desired_cost = 0, max_radius=80):
+    def drone_get_closest_cell_withAstar(self, x, y, grid, desired_cost = 0, max_radius=20):
 
         def create_radial_offsets_coords(radius):
             """
@@ -72,7 +72,7 @@ class droneBSA(BSA):
             # If accessing out of grid, just ignore
             except IndexError:
                 pass
-            self.mav.set_position_with_yaw(self.drone_position_x,self.drone_position_y,self.altitude)
+            self.mav.set_position_with_yaw_woCheck(self.drone_position_x,self.drone_position_y,self.altitude)
             if int(cost) == int(desired_cost):
                 self.astar_goal.pose.position.x = self.position_x + self.cell_grid.info.resolution*(tmp_x)
                 self.astar_goal.pose.position.y = self.position_y + self.cell_grid.info.resolution*(tmp_y)
@@ -131,15 +131,10 @@ class droneBSA(BSA):
     def drone_follow_path(self,path,z):
         error_x = self.position_x - self.drone_position_x
         error_y = self.position_y - self.drone_position_y
-        for pose in path.poses:
-            self.mav.goal_pose.pose.position.x = pose.pose.position.x - error_x
-            self.mav.goal_pose.pose.position.y = pose.pose.position.y - error_y
-            self.mav.goal_pose.pose.position.z = z            
-
-            self.mav.local_position_pub.publish(self.mav.goal_pose)
-            while not self.mav.arrived_setpoint() and not rospy.is_shutdown():
-                self.mav.local_position_pub.publish(self.mav.goal_pose)
-                self.rate.sleep()
+        size = len(path.poses)
+        for pose in enumerate(path.poses):
+            if pose[0]%10 == 0 or pose[0]==size-1:                
+                self.mav.set_position_with_yaw(pose[1].pose.position.x - error_x,pose[1].pose.position.y - error_y,self.altitude)
 
     def drone_backtracking(self,x,y,grid):
         # Backtracking without obstacle avoidance
@@ -245,5 +240,5 @@ class droneBSA(BSA):
 if __name__ == '__main__':
     rospy.init_node("BSA")
     bsa = droneBSA()
-    bsa.droneMainTest()
+    bsa.droneMain()
     
