@@ -1,4 +1,5 @@
 <launch>
-    <param name="detection_type" value="service"/>
+    <arg name="detection_type" default="service"/>
+    <param name="detection_type" value="$(arg detection_type)"/>
     <node pkg="smoke_project" name="SmokeSensorRecognition" type="SmokeSensorRecognition.py" output="screen"/>
 </launch>
