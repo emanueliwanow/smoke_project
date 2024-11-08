@@ -35,7 +35,7 @@ class ImageListener:
         self.pub_bb_image = rospy.Publisher('bb_smoke_sensor_image', Image, queue_size=2)  #Bounding Boxes vom Typ [x_min, y_min, x_max, y_max, x_center, y_center,depth_to_center]
         if self.detection_type == 'service':
             self.bb_service = rospy.Service('/smoke_detection',requestImage, self.imageService)
-        else self.detection_type == 'real-time':
+        else:
             self.bb_pub = rospy.Publisher('/smoke_sensor_bb', Int32MultiArray, queue_size=2)
             self.rate = rospy.Rate(10)
 
