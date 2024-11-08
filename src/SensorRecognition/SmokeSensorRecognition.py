@@ -105,7 +105,7 @@ class ImageListener:
             print(e)
             return array_msg,False
     def main(self):
-        if listener.detection_type == 'service':
+        if self.detection_type == 'service':
             rospy.spin()
         else:
             array_msg = Int32MultiArray()
@@ -120,5 +120,6 @@ class ImageListener:
 if __name__ == '__main__':
     rospy.init_node("image_bounding_boxes")
     listener = ImageListener()
+    listener.main()
     
 
