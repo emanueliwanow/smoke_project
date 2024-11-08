@@ -17,7 +17,8 @@ class ImageListener:
     def __init__(self):
         start_loading_model = time.time() 
         rospack = rospkg.RosPack()
-
+        # The type of the detection structure, 'service' : If you want a service-client structure, 'real-time' : publisher subscriber strucure with real time detection.
+        self.detection_type = rospy.get_param('detection_type', 'service')
         self.model = YOLO('/home/dronelab/best.pt')
         #self.model = YOLO(rospack.get_path('smoke_project')+'/src/SensorRecognition/best.pt') 
         print("Model nach "+ str(time.time() - start_loading_model) + " sekunden geladen")
@@ -30,9 +31,15 @@ class ImageListener:
         self.bridge = CvBridge()
         self.rgb_sub = rospy.Subscriber(self.rgb_topic,Image,self.imageCallback)
 
-        self.bb_service = rospy.Service('/smoke_detection',requestImage, self.imageService)
         
         self.pub_bb_image = rospy.Publisher('bb_smoke_sensor_image', Image, queue_size=2)  #Bounding Boxes vom Typ [x_min, y_min, x_max, y_max, x_center, y_center,depth_to_center]
+        if self.detection_type == 'service':
+            self.bb_service = rospy.Service('/smoke_detection',requestImage, self.imageService)
+        else self.detection_type == 'real-time':
+            self.bb_pub = rospy.Publisher('/smoke_sensor_bb', Int32MultiArray, queue_size=2)
+            self.rate = rospy.Rate(10)
+
+        
 
     def imageCallback(self,data):
         self.rbg_data = data
@@ -69,7 +76,7 @@ class ImageListener:
     
             results = self.detect_img(cv_rgb_image)
             
-            rospy.loginfo(f'Time to detection: {rospy.get_time()-start} seconds')
+            #rospy.loginfo(f'Time to detection: {rospy.get_time()-start} seconds')
 
             if len(results.boxes.conf) > 0:
                        
@@ -97,10 +104,21 @@ class ImageListener:
         except CvBridgeError as e:
             print(e)
             return array_msg,False
+    def main(self):
+        if listener.detection_type == 'service':
+            rospy.spin()
+        else:
+            array_msg = Int32MultiArray()
+            while not rospy.is_shutdown():
+                array_msg, success = listener.imageService(None)
+                self.bb_pub.publish(array_msg)
+                self.rate.sleep()
+
 
 
 
 if __name__ == '__main__':
     rospy.init_node("image_bounding_boxes")
     listener = ImageListener()
-    rospy.spin()
+    
+
