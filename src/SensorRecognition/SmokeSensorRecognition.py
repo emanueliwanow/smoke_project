@@ -21,9 +21,9 @@ class ImageListener:
         self.model = YOLO(rospack.get_path('smoke_project')+'/src/SensorRecognition/best.pt') 
         print("Model nach "+ str(time.time() - start_loading_model) + " sekunden geladen")
 
-        self.rgb_topic = '/usb_cam/image_raw'
+        #self.rgb_topic = '/usb_cam/image_raw'
         #self.rgb_topic = '/camera/color/image_raw'  # check the depth image topic in your Gazebo environmemt and replace this with your
-        #self.rgb_topic = '/d400/color/image_raw'
+        self.rgb_topic = '/d435/color/image_raw'
         self.rbg_data = Image()
 
         self.bridge = CvBridge()
