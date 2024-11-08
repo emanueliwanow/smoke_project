@@ -61,38 +61,30 @@ class ImageListener:
 
 
     def imageService(self,req):
+        start = rospy.get_time()
         array_msg = Int32MultiArray()
         try:
-            #print("start: ", time.time())
+            
             cv_rgb_image = self.bridge.imgmsg_to_cv2(self.rbg_data, self.rbg_data.encoding)
     
             results = self.detect_img(cv_rgb_image)
-            #print(results.boxes)
             
+            rospy.loginfo(f'Time to detection: {rospy.get_time()-start} seconds')
 
             if len(results.boxes.conf) > 0:
-                print("Objects detected!")
-                
-                #index_max = max(range(len(results.boxes.conf.item)), key=results.boxes.conf.item())
-                
-
+                       
                 bounding_boxes = results.boxes.xyxy
                 result_img = results.plot()
-        
+
                 x_min, y_min, x_max, y_max, x_center, y_center = self.get_center_of_box(bounding_boxes)
-                #result_img = cv2.circle(result_img, (x_center,y_center), radius=10, color=(0, 0, 255), thickness=-1)  #Nur für Sim Visualisierung
                 self.pub_bb_image.publish(self.bridge.cv2_to_imgmsg(result_img, encoding='rgb8'))  ###Bei Jetson Verion herausnehmen (nur zu visualisierungszwecken)
 
-                
-
-                
-                array_msg.data = [x_min, y_min, x_max, y_max, x_center, y_center]  # Example array values
-        
+                array_msg.data = [x_min, y_min, x_max, y_max, x_center, y_center]  # Example array values 
     
                 
                 return array_msg, True
             else:
-                print("No objects detected.")
+                
                 
                 self.pub_bb_image.publish(self.bridge.cv2_to_imgmsg(results.orig_img, encoding='rgb8'))
                 return array_msg, False
