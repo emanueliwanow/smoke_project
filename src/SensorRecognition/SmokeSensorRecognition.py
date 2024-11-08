@@ -17,8 +17,9 @@ class ImageListener:
     def __init__(self):
         start_loading_model = time.time() 
         rospack = rospkg.RosPack()
-        
-        self.model = YOLO(rospack.get_path('smoke_project')+'/src/SensorRecognition/best.pt') 
+
+        self.model = YOLO(rospack.get_path('/home/dronelab/best.pt'))
+        #self.model = YOLO(rospack.get_path('smoke_project')+'/src/SensorRecognition/best.pt') 
         print("Model nach "+ str(time.time() - start_loading_model) + " sekunden geladen")
 
         #self.rgb_topic = '/usb_cam/image_raw'
