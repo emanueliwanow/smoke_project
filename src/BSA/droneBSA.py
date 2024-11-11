@@ -41,7 +41,7 @@ class droneBSA(BSA):
     def smokeSensorDetectionCallback(self, data):
         self.smoke_sensor_node_data = data
         if len(self.smoke_sensor_node_data.data)>0:
-            prediction_sensor_position_x,prediction_sensor_position_y = self.predictSmokeSensorPosition(self.smoke_sensor_node_data[4],self.smoke_sensor_node_data[5],self.smoke_sensor_node_data[6],self.smoke_sensor_node_data[7])
+            prediction_sensor_position_x,prediction_sensor_position_y = self.predictSmokeSensorPosition(self.smoke_sensor_node_data.data[4],self.smoke_sensor_node_data.data[5],self.smoke_sensor_node_data.data[6],self.smoke_sensor_node_data.data[7])
             flag = 0
             if len(self.smoke_sensor_position_array) != 0:
                 for i in range(len(self.smoke_sensor_position_array)):
