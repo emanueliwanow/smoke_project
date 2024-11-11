@@ -59,9 +59,10 @@ class droneBSA(BSA):
         #prediction_drone_position_x,prediction_drone_position_y = self.mav.drone_pose.pose.position.x,self.mav.drone_pose.pose.position.y
         distance_from_the_sensor = self.smoke_sensor_altitude - self.altitude
         # Pixel size Y = ((Image width)/2)/(diatance_from_sensor*tang(camera_HFov/2)) 
-        pixel_size_y = ((width)/2)/(distance_from_the_sensor*math.tan(self.camera_HFov/2))
-        pixel_size_x = ((height)/2)/(distance_from_the_sensor*math.tan(self.camera_VFov/2))
+        pixel_size_y = (distance_from_the_sensor*math.tan(self.camera_HFov/2))/((width)/2)
+        pixel_size_x = (distance_from_the_sensor*math.tan(self.camera_VFov/2))/((height)/2)
         rospy.loginfo(f'Pixel size X: {pixel_size_x}, Y: {pixel_size_y}')
+        rospy.loginfo(f'Center X: {x_center}, Y: {y_center}')
 
         prediction_sensor_position_x = ((x_center-(width/2))*pixel_size_x)+prediction_drone_position_x
         prediction_sensor_position_y = ((y_center-(height/2))*pixel_size_y)+prediction_drone_position_y
