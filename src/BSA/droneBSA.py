@@ -45,7 +45,7 @@ class droneBSA(BSA):
             flag = 0
             if len(self.smoke_sensor_position_array) != 0:
                 for i in range(len(self.smoke_sensor_position_array)):
-                    if abs(self.smoke_sensor_position_array[i][0]-prediction_sensor_position_x)<0.9 and abs(self.smoke_sensor_position_array[i][1]-prediction_sensor_position_y)<0.9:
+                    if abs(self.smoke_sensor_position_array[i][0]-prediction_sensor_position_x)<self.smoke_sensor_threshold and abs(self.smoke_sensor_position_array[i][1]-prediction_sensor_position_y)<self.smoke_sensor_threshold:
                         flag = 1
             if flag == 0:
                 rospy.loginfo("New sensor detected")
@@ -66,7 +66,7 @@ class droneBSA(BSA):
 
         prediction_sensor_position_x = ((x_center-(width/2))*pixel_size_x)+prediction_drone_position_x
         prediction_sensor_position_y = ((y_center-(height/2))*pixel_size_y)+prediction_drone_position_y
-        rospy.loginfo(f'Sensor in X: {prediction_sensor_position_x}, Y: {prediction_drone_position_y}')
+        rospy.loginfo(f'Sensor in X: {prediction_sensor_position_x}, Y: {prediction_sensor_position_y}')
         return prediction_sensor_position_x,prediction_sensor_position_y
 
 
