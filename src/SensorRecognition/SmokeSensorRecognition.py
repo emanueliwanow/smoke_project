@@ -32,7 +32,7 @@ class ImageListener:
         self.rgb_sub = rospy.Subscriber(self.rgb_topic,Image,self.imageCallback)
 
         
-        self.pub_bb_image = rospy.Publisher('bb_smoke_sensor_image', Image, queue_size=2)  #Bounding Boxes vom Typ [x_min, y_min, x_max, y_max, x_center, y_center,depth_to_center]
+        self.pub_bb_image = rospy.Publisher('bb_smoke_sensor_image', Image, queue_size=2)  #Bounding Boxes vom Typ [x_min, y_min, x_max, y_max, x_center, y_center,height, width]
         if self.detection_type == 'service':
             self.bb_service = rospy.Service('/smoke_detection',requestImage, self.imageService)
         else:
@@ -86,7 +86,7 @@ class ImageListener:
                 x_min, y_min, x_max, y_max, x_center, y_center = self.get_center_of_box(bounding_boxes)
                 self.pub_bb_image.publish(self.bridge.cv2_to_imgmsg(result_img, encoding='rgb8'))  ###Bei Jetson Verion herausnehmen (nur zu visualisierungszwecken)
 
-                array_msg.data = [x_min, y_min, x_max, y_max, x_center, y_center]  # Example array values 
+                array_msg.data = [x_min, y_min, x_max, y_max, x_center, y_center,self.rbg_data.height, self.rbg_data.width]  # Example array values 
     
                 
                 return array_msg, True

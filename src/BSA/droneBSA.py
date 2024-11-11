@@ -9,7 +9,7 @@ from nav_msgs.msg import OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, Pose , PoseWithCovarianceStamped
 from itertools import product
 from BSA import BSA
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Int32MultiArray
 from std_srvs.srv import Trigger
 from mavbase.MAV import MAV
 
@@ -27,6 +27,47 @@ class droneBSA(BSA):
         self.position_y = 0
         self.cell_origin.position.x = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_x
         self.cell_origin.position.y = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_y
+
+
+        self.smoke_sensor_node_sub = rospy.Subscriber("/smoke_sensor_bb",Int32MultiArray, self.smokeSensorDetectionCallback)
+        self.smoke_sensor_node_data = Int32MultiArray()
+        self.smoke_sensor_position_array = []
+        self.smoke_sensor_checked_array = []
+        self.smoke_sensor_threshold = 0.9
+        self.smoke_sensor_altitude = 2.5 # Distance of the smoke sensor from the ground (Or the home altitude from the drone)
+        self.camera_HFov = math.radians(69) # In radians
+        self.camera_VFov = math.radians(42) # In radians
+
+    def smokeSensorDetectionCallback(self, data):
+        self.smoke_sensor_node_data = data
+        if len(self.smoke_sensor_node_data.data)>0:
+            prediction_sensor_position_x,prediction_sensor_position_y = self.predictSmokeSensorPosition(self.smoke_sensor_node_data[4],self.smoke_sensor_node_data[5],self.smoke_sensor_node_data[6],self.smoke_sensor_node_data[7])
+            flag = 0
+            if len(self.smoke_sensor_position_array) != 0:
+                for i in range(len(self.smoke_sensor_position_array)):
+                    if abs(self.smoke_sensor_position_array[i][0]-prediction_sensor_position_x)<0.9 and abs(self.smoke_sensor_position_array[i][1]-prediction_sensor_position_y)<0.9:
+                        flag = 1
+            if flag == 0:
+                rospy.loginfo("New sensor detected")
+                self.smoke_sensor_position_array.append([prediction_sensor_position_x,prediction_sensor_position_y])
+                self.smoke_sensor_checked_array.append(0)
+                #rospy.loginfo(f'Number of sensor detected: {len(self.sensor_positions)}')
+
+
+    def predictSmokeSensorPosition(self,x_center,y_center,height,width):
+        prediction_drone_position_x,prediction_drone_position_y = 0,0
+        #prediction_drone_position_x,prediction_drone_position_y = self.mav.drone_pose.pose.position.x,self.mav.drone_pose.pose.position.y
+        distance_from_the_sensor = self.smoke_sensor_altitude - self.altitude
+        # Pixel size Y = ((Image width)/2)/(diatance_from_sensor*tang(camera_HFov/2)) 
+        pixel_size_y = ((width)/2)/(distance_from_the_sensor*math.tan(self.camera_HFov/2))
+        pixel_size_x = ((height)/2)/(distance_from_the_sensor*math.tan(self.camera_VFov/2))
+
+        prediction_sensor_position_x = ((x_center-(width/2))*pixel_size_x)+prediction_drone_position_x
+        prediction_sensor_position_y = ((y_center-(width/2))*pixel_size_y)+prediction_drone_position_y
+        rospy.loginfo(f'Sensor in X: {prediction_sensor_position_x}, Y: {prediction_drone_position_y}')
+        return prediction_sensor_position_x,prediction_sensor_position_y
+
+
 
     def drone_get_closest_cell_withAstar(self, x, y, grid, desired_cost = 0, max_radius=20):
 
@@ -151,6 +192,9 @@ class droneBSA(BSA):
         else:
             return False
 
+    def drone_check_for_sensor(self):
+        return
+
     def droneBSA_loop(self):
         self.state = 0 
         surroundings = self.check_surroundings_2()
@@ -209,6 +253,9 @@ class droneBSA(BSA):
         self.mav.land()
         self.mav._disarm() 
         rospy.loginfo(f"Seconds used: {(rospy.get_time() - self.seconds)}") 
+    
+    def smokeMain(self):
+        rospy.spin()
 
     def droneMainTest(self):
         self.initialize_cell_grid()
@@ -240,5 +287,5 @@ class droneBSA(BSA):
 if __name__ == '__main__':
     rospy.init_node("BSA")
     bsa = droneBSA()
-    bsa.droneMain()
+    bsa.smokeMain()
     
