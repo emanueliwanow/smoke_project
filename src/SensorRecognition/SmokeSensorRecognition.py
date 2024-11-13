@@ -26,7 +26,7 @@ class ImageListener:
         #self.rgb_topic = '/usb_cam/image_raw'
         #self.rgb_topic = '/camera/color/image_raw'  # check the depth image topic in your Gazebo environmemt and replace this with your
         self.rgb_topic = '/d435/color/image_raw'
-        self.rbg_data = Image()
+        self.rgb_data = Image()
         self.camera_info = rospy.wait_for_message('/d435/color/camera_info',CameraInfo,timeout=3)
 
         # Intrinsic camera matrix for the raw (distorted) images.
