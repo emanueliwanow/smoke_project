@@ -58,7 +58,7 @@ class ImageListener:
         
 
     def imageCallback(self,data):
-        self.rbg_data = data
+        self.rgb_data = data
 
     def depthCallback(self,data):
         self.depth_data = data
@@ -102,7 +102,7 @@ class ImageListener:
             rgb_data = self.rgb_data
             depth_data = self.depth_data
 
-            cv_rgb_image = self.bridge.imgmsg_to_cv2(self.rbg_data, self.rbg_data.encoding)
+            cv_rgb_image = self.bridge.imgmsg_to_cv2(rgb_data, rgb_data.encoding)
             
             results = self.detect_img(cv_rgb_image)
             
