@@ -37,6 +37,7 @@
   <arg name="pointcloud_texture_stream" default="RS2_STREAM_COLOR"/>
   <arg name="allow_no_texture_points"   default="false"/>
   <arg name="pointcloud_texture_index"  default="0"/>
+  <arg name="ordered_pc"                default="false"/>
 
   <arg name="enable_sync"               default="false"/>
   <arg name="align_depth"               default="false"/>
@@ -107,6 +108,7 @@
       <arg name="calib_odom_file"          value="$(arg calib_odom_file)"/>
       <arg name="publish_odom_tf"          value="$(arg publish_odom_tf)"/>
       <arg name="allow_no_texture_points"  value="$(arg allow_no_texture_points)"/>
+      <arg name="ordered_pc"               value="$(arg ordered_pc)"/>
       <arg name="stereo_module/exposure/1" value="$(arg stereo_module/exposure/1)"/>
       <arg name="stereo_module/gain/1"     value="$(arg stereo_module/gain/1)"/>
       <arg name="stereo_module/exposure/2" value="$(arg stereo_module/exposure/2)"/>
