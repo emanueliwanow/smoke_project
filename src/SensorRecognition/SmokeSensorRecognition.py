@@ -86,7 +86,8 @@ class ImageListener:
 
     def estimate_sensor_position(self, depth_image,u,v):
         cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image,depth_image.encoding)
-        dist = cv_depth_image[u,v]
+        rospy.loginfo(f'Depth image size {cv_depth_image.shape}')
+        dist = cv_depth_image[v,u]
         Xtarget = dist*(u-self.cx)/(self.fx)
         Ytarget = dist*(v-self.cy)/(self.fy)
         Ztarget = dist
