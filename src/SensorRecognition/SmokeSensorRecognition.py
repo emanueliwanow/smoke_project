@@ -27,14 +27,25 @@ class ImageListener:
         #self.rgb_topic = '/camera/color/image_raw'  # check the depth image topic in your Gazebo environmemt and replace this with your
         self.rgb_topic = '/d435/color/image_raw'
         self.rbg_data = Image()
+        self.camera_info = rospy.wait_for_message('/d435/color/camera_info',timeout=3)
 
-        self.depth_topic = '/d435/depth/image_raw'
-        self.rgb_data = Image()
-        
+        # Intrinsic camera matrix for the raw (distorted) images.
+        #     [fx  0 cx]
+        # K = [ 0 fy cy]
+        #     [ 0  0  1]
+        self.fx = self.camera_info.K[0]
+        self.fy = self.camera_info.K[4]
+        self.cx = self.camera_info.K[2]
+        self.cy = self.camera_info.K[5]
+
+        self.depth_topic = '/d435/depth/image_rect_raw'
+        self.depth_data = Image()
+
 
         self.bridge = CvBridge()
         self.rgb_sub = rospy.Subscriber(self.rgb_topic,Image,self.imageCallback)
-        self.depth_sub = rospy.Subscriber()
+        self.depth_sub = rospy.Subscriber(self.depth_topic,self.depthCallback)
+
 
         
         self.pub_bb_image = rospy.Publisher('bb_smoke_sensor_image', Image, queue_size=2)  #Bounding Boxes vom Typ [x_min, y_min, x_max, y_max, x_center, y_center,height, width]
@@ -48,7 +59,8 @@ class ImageListener:
 
     def imageCallback(self,data):
         self.rbg_data = data
-
+    def depthCallback(self,data):
+        self.depth_data = data
 
 
     def detect_img(self, img):
@@ -71,14 +83,26 @@ class ImageListener:
         
         return int(x_min), int(y_min), int(x_max), int(y_max), x_center,y_center
 
+    def estimate_sensor_position(self, depth_image,u,v):
+        cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image,depth_image.encoding)
+        dist = depth_image[u,v]
+        Xtarget = dist*(u-self.cx)/(self.fx)
+        Ytarget = dist*(v-self.cy)/(self.fy)
+        Ztarget = dist
+        return Xtarget,Ytarget,Ztarget
+
+
 
     def imageService(self,req):
         start = rospy.get_time()
         array_msg = Int32MultiArray()
         try:
             
+            rgb_data = self.rgb_data
+            depth_data = self.depth_data
+
             cv_rgb_image = self.bridge.imgmsg_to_cv2(self.rbg_data, self.rbg_data.encoding)
-    
+            
             results = self.detect_img(cv_rgb_image)
             
             #rospy.loginfo(f'Time to detection: {rospy.get_time()-start} seconds')
@@ -90,8 +114,10 @@ class ImageListener:
 
                 x_min, y_min, x_max, y_max, x_center, y_center = self.get_center_of_box(bounding_boxes)
                 self.pub_bb_image.publish(self.bridge.cv2_to_imgmsg(result_img, encoding='rgb8'))  ###Bei Jetson Verion herausnehmen (nur zu visualisierungszwecken)
-
-                array_msg.data = [x_min, y_min, x_max, y_max, x_center, y_center,self.rbg_data.height, self.rbg_data.width]  # Example array values 
+                Xtarget,Ytarget,Ztarget = self.estimate_sensor_position(depth_data,x_center,y_center)
+                array_msg.data = [Xtarget,Ytarget,Ztarget] 
+                rospy.loginfo(f'Object detected X:{Xtarget}, Y:{Ytarget}, Z:{Ztarget}')
+                #array_msg.data = [x_min, y_min, x_max, y_max, x_center, y_center,self.rbg_data.height, self.rbg_data.width]  # Example array values 
     
                 
                 return array_msg, True
