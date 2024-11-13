@@ -204,7 +204,8 @@ class droneBSA(BSA):
         self.state = 1
 
         while not surroundings[0] and not rospy.is_shutdown():  
-            self.state = 1          
+            self.state = 1    
+            self.drone_check_for_sensor()      
             self.drone_move()
             surroundings = self.check_surroundings_2()
             self.update_cellmap(self.x,self.y,surroundings)
@@ -217,7 +218,7 @@ class droneBSA(BSA):
             
             
             if surroundings == [1,1,0,1]:
-                #self.check_for_sensor() 
+                self.drone_check_for_sensor() 
                 
                 backtrack = self.drone_backtracking(self.x,self.y,self.cell_grid)
                 self.state = 0
@@ -231,7 +232,7 @@ class droneBSA(BSA):
                 
             if not surroundings[3]:
                 self.turn_left()
-                #self.check_for_sensor() 
+                self.drone_check_for_sensor() 
                 self.drone_move()
                 surroundings = self.check_surroundings_2()
                 self.update_cellmap(self.x,self.y,surroundings)
@@ -239,7 +240,7 @@ class droneBSA(BSA):
             elif surroundings[0]:
                 self.turn_right()
             else:
-                #self.check_for_sensor() 
+                self.drone_check_for_sensor() 
                 self.drone_move()
 
     def droneMain(self):   

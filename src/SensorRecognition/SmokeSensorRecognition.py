@@ -3,7 +3,7 @@ import numpy as np
 from ultralytics import YOLO
 import rospy
 import rospkg
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
 import sys
 import time
@@ -28,8 +28,13 @@ class ImageListener:
         self.rgb_topic = '/d435/color/image_raw'
         self.rbg_data = Image()
 
+        self.depth_topic = '/d435/depth/image_raw'
+        self.rgb_data = Image()
+        
+
         self.bridge = CvBridge()
         self.rgb_sub = rospy.Subscriber(self.rgb_topic,Image,self.imageCallback)
+        self.depth_sub = rospy.Subscriber()
 
         
         self.pub_bb_image = rospy.Publisher('bb_smoke_sensor_image', Image, queue_size=2)  #Bounding Boxes vom Typ [x_min, y_min, x_max, y_max, x_center, y_center,height, width]
