@@ -44,7 +44,7 @@ class ImageListener:
 
         self.bridge = CvBridge()
         self.rgb_sub = rospy.Subscriber(self.rgb_topic,Image,self.imageCallback)
-        self.depth_sub = rospy.Subscriber(self.depth_topic,self.depthCallback)
+        self.depth_sub = rospy.Subscriber(self.depth_topic,Image,self.depthCallback)
 
 
         
@@ -59,6 +59,7 @@ class ImageListener:
 
     def imageCallback(self,data):
         self.rbg_data = data
+
     def depthCallback(self,data):
         self.depth_data = data
 
