@@ -115,7 +115,7 @@ class ImageListener:
                 result_img = results.plot()
 
                 x_min, y_min, x_max, y_max, x_center, y_center = self.get_center_of_box(bounding_boxes)
-                rospy.loginfo(f"Centers X: {x_center}, Y: {y}")
+                rospy.loginfo(f"Centers X: {x_center}, Y: {y_center}")
                 self.pub_bb_image.publish(self.bridge.cv2_to_imgmsg(result_img, encoding='rgb8'))  ###Bei Jetson Verion herausnehmen (nur zu visualisierungszwecken)
                 Xtarget,Ytarget,Ztarget = self.estimate_sensor_position(depth_data,x_center,y_center)
                 array_msg.data = [Xtarget,Ytarget,Ztarget] 
