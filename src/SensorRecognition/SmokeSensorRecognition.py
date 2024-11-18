@@ -65,7 +65,7 @@ class ImageListener:
 
 
     def detect_img(self, img):
-        result = self.model(img, verbose=False, conf = 0.6)
+        result = self.model(img, verbose=False, conf = 0.5)
         return result[0]
 
     def get_center_of_box(self, box):
@@ -86,7 +86,7 @@ class ImageListener:
 
     def estimate_sensor_position(self, depth_image,u,v):
         cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image,depth_image.encoding)
-        rospy.loginfo(f'Depth image size {cv_depth_image.shape}')
+        
         dist = cv_depth_image[v,u]/1000 # Pass to meters
         Xtarget = dist*(u-self.cx)/(self.fx)
         Ytarget = dist*(v-self.cy)/(self.fy)
