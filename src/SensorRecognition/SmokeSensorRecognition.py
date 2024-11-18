@@ -88,8 +88,8 @@ class ImageListener:
         cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image,depth_image.encoding)
         
         dist = cv_depth_image[v,u]/1000 # Pass to meters
-        Xtarget = dist*(u-self.cx)/(self.fx)
-        Ytarget = dist*(v-self.cy)/(self.fy)
+        Ytarget = dist*(u-self.cx)/(self.fx) # Putting the coordinates the as the drone X Front, Y positive right
+        Xtarget = dist*(v-self.cy)/(self.fy)
         Ztarget = dist
         return Xtarget,Ytarget,Ztarget
 
@@ -115,7 +115,6 @@ class ImageListener:
                 result_img = results.plot()
 
                 x_min, y_min, x_max, y_max, x_center, y_center = self.get_center_of_box(bounding_boxes)
-                rospy.loginfo(f"Centers X: {x_center}, Y: {y_center}")
                 self.pub_bb_image.publish(self.bridge.cv2_to_imgmsg(result_img, encoding='rgb8'))  ###Bei Jetson Verion herausnehmen (nur zu visualisierungszwecken)
                 Xtarget,Ytarget,Ztarget = self.estimate_sensor_position(depth_data,x_center,y_center)
                 array_msg.data = [Xtarget,Ytarget,Ztarget] 
