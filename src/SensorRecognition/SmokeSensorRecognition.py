@@ -11,6 +11,7 @@ from std_msgs.msg import UInt16, Int32MultiArray
 from std_srvs.srv import Empty
 import cv2
 from smoke_project.srv import requestImage
+from geometry_msgs.msg import PoseStamped
 
 
 class ImageListener:
@@ -55,6 +56,11 @@ class ImageListener:
             self.bb_pub = rospy.Publisher('/smoke_sensor_bb', Int32MultiArray, queue_size=2)
             self.rate = rospy.Rate(10)
 
+        self.pose_estimation_type = rospy.get_param('pose_estimation_type', 'global') # Can be either local or global for the smoke sensor pose estimation
+
+        self.drone_pose = PoseStamped()
+        self.drone_pose_sub = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, self.dronePoseCallback)
+
         
 
     def imageCallback(self,data):
@@ -62,6 +68,9 @@ class ImageListener:
 
     def depthCallback(self,data):
         self.depth_data = data
+
+    def dronePoseCallback(self,data):
+        self.drone_pose = data
 
 
     def detect_img(self, img):
@@ -91,6 +100,11 @@ class ImageListener:
         Ytarget = dist*(u-self.cx)/(self.fx) # Putting the coordinates the as the drone X Front, Y positive right
         Xtarget = dist*(v-self.cy)/(self.fy)
         Ztarget = dist
+        if self.pose_estimation_type = 'global':
+            Ytarget = Ytarget - self.drone_pose.pose.position.y
+            Xtarget = Xtarget - self.drone_pose.pose.position.x
+            Ztarget = Ztarget - self.drone_pose.pose.position.z
+
         return Xtarget,Ytarget,Ztarget
 
 

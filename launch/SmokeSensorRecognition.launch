@@ -1,5 +1,7 @@
 <launch>
     <arg name="detection_type" default="real-time"/>
+    <arg name="pose_estimation_type" default="global"/>
     <param name="detection_type" value="$(arg detection_type)"/>
+    <param name="pose_estimation_type" value="$(arg pose_estimation_type)"/>
     <node pkg="smoke_project" name="SmokeSensorRecognition" type="SmokeSensorRecognition.py" output="screen"/>
 </launch>
