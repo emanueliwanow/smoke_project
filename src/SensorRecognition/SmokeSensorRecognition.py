@@ -97,13 +97,13 @@ class ImageListener:
         cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image,depth_image.encoding)
         
         dist = cv_depth_image[v,u]/1000 # Pass to meters
-        Ytarget = dist*(u-self.cx)/(self.fx) # Putting the coordinates the as the drone X Front, Y positive right
+        Ytarget = -dist*(u-self.cx)/(self.fx) # Putting the coordinates the as the drone X Front, Y positive right
         Xtarget = dist*(v-self.cy)/(self.fy)
         Ztarget = dist
         if self.pose_estimation_type == 'global':
-            Ytarget = Ytarget - self.drone_pose.pose.position.y
-            Xtarget = Xtarget - self.drone_pose.pose.position.x
-            Ztarget = Ztarget - self.drone_pose.pose.position.z
+            Ytarget = Ytarget + self.drone_pose.pose.position.y
+            Xtarget = Xtarget + self.drone_pose.pose.position.x
+            Ztarget = Ztarget + self.drone_pose.pose.position.z
 
         return Xtarget,Ytarget,Ztarget
 
