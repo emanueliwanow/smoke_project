@@ -19,7 +19,7 @@ class ImageListener:
         start_loading_model = time.time() 
         rospack = rospkg.RosPack()
         # The type of the detection structure, 'service' : If you want a service-client structure, 'real-time' : publisher subscriber strucure with real time detection.
-        self.detection_type = rospy.get_param('detection_type', 'service')
+        self.detection_type = rospy.get_param('detection_type', 'real-time')
         self.model = YOLO('/home/dronelab/YOLO/best.pt')
         #self.model = YOLO(rospack.get_path('smoke_project')+'/src/SensorRecognition/best.pt') 
         print("Model nach "+ str(time.time() - start_loading_model) + " sekunden geladen")
@@ -157,7 +157,7 @@ class ImageListener:
         else:
             array_msg = Int32MultiArray()
             while not rospy.is_shutdown():
-                array_msg, success = listener.imageService(None)
+                array_msg, success = self.imageService(None)
                 self.bb_pub.publish(array_msg)
                 self.rate.sleep()
 
