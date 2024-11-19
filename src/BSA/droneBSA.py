@@ -33,41 +33,26 @@ class droneBSA(BSA):
         self.smoke_sensor_node_data = Int32MultiArray()
         self.smoke_sensor_position_array = []
         self.smoke_sensor_checked_array = []
-        self.smoke_sensor_threshold = 0.9
-        self.smoke_sensor_altitude = 2.5 # Distance of the smoke sensor from the ground (Or the home altitude from the drone)
-        self.camera_HFov = math.radians(69) # In radians
-        self.camera_VFov = math.radians(42) # In radians
+
+    
+        
 
     def smokeSensorDetectionCallback(self, data):
         self.smoke_sensor_node_data = data
-        if len(self.smoke_sensor_node_data.data)>0:
-            prediction_sensor_position_x,prediction_sensor_position_y = self.predictSmokeSensorPosition(self.smoke_sensor_node_data.data[4],self.smoke_sensor_node_data.data[5],self.smoke_sensor_node_data.data[6],self.smoke_sensor_node_data.data[7])
-            flag = 0
-            if len(self.smoke_sensor_position_array) != 0:
-                for i in range(len(self.smoke_sensor_position_array)):
-                    if abs(self.smoke_sensor_position_array[i][0]-prediction_sensor_position_x)<self.smoke_sensor_threshold and abs(self.smoke_sensor_position_array[i][1]-prediction_sensor_position_y)<self.smoke_sensor_threshold:
-                        flag = 1
-            if flag == 0:
-                rospy.loginfo("New sensor detected")
-                self.smoke_sensor_position_array.append([prediction_sensor_position_x,prediction_sensor_position_y])
-                self.smoke_sensor_checked_array.append(0)
-                #rospy.loginfo(f'Number of sensor detected: {len(self.sensor_positions)}')
+        if self.smoke_sensor_node_data.data[2] < 0.1:
+            if len(self.smoke_sensor_node_data.data)>0:
+                prediction_sensor_position_x,prediction_sensor_position_y,prediction_sensor_position_z = self.smoke_sensor_node_data.data[0],self.smoke_sensor_node_data.data[1],self.smoke_sensor_node_data.data[2]
+                flag = 0
+                if len(self.smoke_sensor_position_array) != 0:
+                    for i in range(len(self.smoke_sensor_position_array)):
+                        if abs(self.smoke_sensor_position_array[i][0]-prediction_sensor_position_x)<self.smoke_sensor_threshold and abs(self.smoke_sensor_position_array[i][1]-prediction_sensor_position_y)<self.smoke_sensor_threshold:
+                            flag = 1
+                if flag == 0:
+                    rospy.loginfo("New sensor detected")
+                    self.smoke_sensor_position_array.append([prediction_sensor_position_x,prediction_sensor_position_y])
+                    self.smoke_sensor_checked_array.append(0)
+                    #rospy.loginfo(f'Number of sensor detected: {len(self.sensor_positions)}')
 
-
-    def predictSmokeSensorPosition(self,x_center,y_center,height,width):
-        prediction_drone_position_x,prediction_drone_position_y = 0,0
-        #prediction_drone_position_x,prediction_drone_position_y = self.mav.drone_pose.pose.position.x,self.mav.drone_pose.pose.position.y
-        distance_from_the_sensor = self.smoke_sensor_altitude - self.altitude
-        # Pixel size Y = ((Image width)/2)/(diatance_from_sensor*tang(camera_HFov/2)) 
-        pixel_size_y = (distance_from_the_sensor*math.tan(self.camera_HFov/2))/((width)/2)
-        pixel_size_x = (distance_from_the_sensor*math.tan(self.camera_VFov/2))/((height)/2)
-        rospy.loginfo(f'Pixel size X: {pixel_size_x}, Y: {pixel_size_y}')
-        rospy.loginfo(f'Center X: {x_center}, Y: {y_center}')
-
-        prediction_sensor_position_x = ((x_center-(width/2))*pixel_size_x)+prediction_drone_position_x
-        prediction_sensor_position_y = ((y_center-(height/2))*pixel_size_y)+prediction_drone_position_y
-        rospy.loginfo(f'Sensor in X: {prediction_sensor_position_x}, Y: {prediction_sensor_position_y}')
-        return prediction_sensor_position_x,prediction_sensor_position_y
 
 
 
