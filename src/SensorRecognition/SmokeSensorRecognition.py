@@ -100,7 +100,7 @@ class ImageListener:
         Ytarget = dist*(u-self.cx)/(self.fx) # Putting the coordinates the as the drone X Front, Y positive right
         Xtarget = dist*(v-self.cy)/(self.fy)
         Ztarget = dist
-        if self.pose_estimation_type = 'global':
+        if self.pose_estimation_type == 'global':
             Ytarget = Ytarget - self.drone_pose.pose.position.y
             Xtarget = Xtarget - self.drone_pose.pose.position.x
             Ztarget = Ztarget - self.drone_pose.pose.position.z
