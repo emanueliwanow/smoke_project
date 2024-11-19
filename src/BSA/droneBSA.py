@@ -9,7 +9,7 @@ from nav_msgs.msg import OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, Pose , PoseWithCovarianceStamped
 from itertools import product
 from BSA import BSA
-from std_msgs.msg import Bool, Int32MultiArray
+from std_msgs.msg import Bool, Int32MultiArray, Float32MultiArray
 from std_srvs.srv import Trigger
 from mavbase.MAV import MAV
 
@@ -29,7 +29,7 @@ class droneBSA(BSA):
         self.cell_origin.position.y = -(((self.map_size/2)*self.cell_resolution)+(self.cell_resolution/2))+self.position_y
 
 
-        self.smoke_sensor_node_sub = rospy.Subscriber("/smoke_sensor_bb",Int32MultiArray, self.smokeSensorDetectionCallback)
+        self.smoke_sensor_node_sub = rospy.Subscriber("/smoke_sensor_bb",Float32MultiArray, self.smokeSensorDetectionCallback)
         self.smoke_sensor_node_data = Int32MultiArray()
         self.smoke_sensor_position_array = []
         self.smoke_sensor_checked_array = []

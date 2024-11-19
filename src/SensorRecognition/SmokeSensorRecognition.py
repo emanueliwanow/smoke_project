@@ -7,7 +7,7 @@ from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge, CvBridgeError
 import sys
 import time
-from std_msgs.msg import UInt16, Int32MultiArray
+from std_msgs.msg import UInt16, Float32MultiArray
 from std_srvs.srv import Empty
 import cv2
 from smoke_project.srv import requestImage
@@ -53,7 +53,7 @@ class ImageListener:
         if self.detection_type == 'service':
             self.bb_service = rospy.Service('/smoke_detection',requestImage, self.imageService)
         else:
-            self.bb_pub = rospy.Publisher('/smoke_sensor_bb', Int32MultiArray, queue_size=2)
+            self.bb_pub = rospy.Publisher('/smoke_sensor_bb', Float32MultiArray, queue_size=2)
             self.rate = rospy.Rate(10)
 
         self.pose_estimation_type = rospy.get_param('pose_estimation_type', 'global') # Can be either local or global for the smoke sensor pose estimation
@@ -111,7 +111,7 @@ class ImageListener:
 
     def imageService(self,req):
         start = rospy.get_time()
-        array_msg = Int32MultiArray()
+        array_msg = Float32MultiArray()
         try:
             
             rgb_data = self.rgb_data
