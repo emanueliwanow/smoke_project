@@ -30,7 +30,7 @@ class droneBSA(BSA):
 
 
         self.smoke_sensor_node_sub = rospy.Subscriber("/smoke_sensor_bb",Float32MultiArray, self.smokeSensorDetectionCallback)
-        self.smoke_sensor_node_data = Int32MultiArray()
+        self.smoke_sensor_node_data = Float32MultiArray()
         self.smoke_sensor_position_array = []
         self.smoke_sensor_checked_array = []
 

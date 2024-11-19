@@ -155,7 +155,7 @@ class ImageListener:
         if self.detection_type == 'service':
             rospy.spin()
         else:
-            array_msg = Int32MultiArray()
+            array_msg = Float32MultiArray()
             while not rospy.is_shutdown():
                 array_msg, success = self.imageService(None)
                 self.bb_pub.publish(array_msg)
