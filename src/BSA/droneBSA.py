@@ -34,6 +34,8 @@ class droneBSA(BSA):
         self.smoke_sensor_position_array = []
         self.smoke_sensor_checked_array = []
 
+        self.smoke_sensor_threshold = 0.6
+
     
         
 
