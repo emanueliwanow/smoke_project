@@ -44,7 +44,7 @@ class ImageListener:
         #self.depth_data = Image()
 
         # Instead of the depth information, the altitude of the smoke detector will be the input parameter
-        self.smoke_sensor_altitude = 2.8 
+        self.smoke_sensor_altitude = 2.5 
 
 
         self.bridge = CvBridge()
