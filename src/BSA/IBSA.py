@@ -12,11 +12,11 @@ from BSA import BSA
 from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
 
-POSITIONS = [[10.2,17.1]]
+POSITIONS = [[12.5,30.0]]
 # For SOS Lab
 #[[10,5],[3.1, 34.6], [15,70.4], [25.1, 30.2],[12.5,30.0]]
 # For warehouse
-#[[1,1],[10.3,10.4],[15.2,18.1],[10.2,17.1]]
+#[[1,1],[10.3,10.4],[15.2,18.1],[10.2,17.1],[11.4,5.1]]
 
 class IBSA(BSA):
     def __init__(self,posX,posY):
@@ -24,6 +24,8 @@ class IBSA(BSA):
         self.number_of_sensors = 3 #Number of sensor to inspect
         self.distance_apart = 3 #Assumption of minimal distance beetween two sensor
         self.pixels_apart = 5
+
+        self.time_flood_fill = 0
     
     def create_radial_offsets_coords(self,radius):
             coords = {}
@@ -60,6 +62,7 @@ class IBSA(BSA):
                 rospy.loginfo(f'x: {tmp_x}, y: {tmp_y} Gridmap info:{self.cartographer_grid.info} index: {self.index}')
                 pass
     def flood_fill(self):
+        start_time = rospy.get_time()
         queue = [(0, 0, 0)] # (x, y, distance)
         while queue:
             tmp_x, tmp_y, distance = queue.pop(0)
@@ -82,6 +85,7 @@ class IBSA(BSA):
             
             self.og_pub.publish(self.cell_grid)
             self.rate.sleep()
+        self.time_flood_fill += rospy.get_time() - start_time
         return
 
     def distance(self,p1, p2):
@@ -167,6 +171,8 @@ class IBSA(BSA):
         rospy.loginfo("Finished")
         rospy.loginfo(f"Seconds used: {(rospy.get_time() - self.seconds)}")  
         rospy.loginfo(f"Processing time per node: {(rospy.get_time() - self.seconds)/self.number_of_nodes}")
+        rospy.loginfo(f"Processing time per backtracking node: {self.time_of_backtracks/(self.number_of_backtracks)}")
+        rospy.loginfo(f"Processing time per non backtracking node: {((rospy.get_time() - self.seconds)-(self.time_of_backtracks+self.time_flood_fill))/(self.number_of_nodes-self.number_of_backtracks)}")
         rospy.loginfo(f'Sensors detected:{len(self.sensor_positions)}')
         
         for i in range(len(self.path.poses)-1):

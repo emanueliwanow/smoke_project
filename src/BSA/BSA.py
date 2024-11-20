@@ -12,11 +12,11 @@ from itertools import product
 from astar.srv import astar_srv
 from std_srvs.srv import Trigger
 
-POSITIONS = [[10.2,17.1]]
+POSITIONS = [[12.5,30.0]]
 # For SOS Lab
 #[[10,5],[3.1, 34.6], [15,70.4], [25.1, 30.2],[12.5,30.0]]
 # For warehouse
-#[[1,1],[10.3,10.4],[15.2,18.1],[10.2,17.1]]
+#[[1,1],[10.3,10.4],[15.2,18.1],[10.2,17.1],[11.4,5.1]]
 
 
 class BSA:
@@ -81,6 +81,9 @@ class BSA:
 
         self.distance_traveled = 0
         self.number_of_nodes = 0
+
+        self.number_of_backtracks = 0
+        self.time_of_backtracks = 0
         
 
 
@@ -490,6 +493,7 @@ class BSA:
 
     def backtracking(self,x,y,grid):
         # Backtracking without obstacle avoidance
+        start_time = rospy.get_time()
         self.number_of_nodes+=1
         shortest_path,goal_x,goal_y = self.get_closest_cell_withAstar(x,y,grid)
         if shortest_path != None: 
@@ -498,8 +502,12 @@ class BSA:
             self.x = goal_x
             self.y = goal_y
             self.follow_path(shortest_path)
+            self.time_of_backtracks += (rospy.get_time() - start_time)
+            self.number_of_backtracks += 1
             return True
         else:
+            self.time_of_backtracks += (rospy.get_time() - start_time)
+            self.number_of_backtracks += 1
             return False
 
 
@@ -563,6 +571,8 @@ class BSA:
         rospy.loginfo("Finished")
         rospy.loginfo(f"Seconds used: {(rospy.get_time() - self.seconds)}")  
         rospy.loginfo(f"Processing time per node: {(rospy.get_time() - self.seconds)/self.number_of_nodes}")
+        rospy.loginfo(f"Processing time per backtracking node: {self.time_of_backtracks/(self.number_of_backtracks)}")
+        rospy.loginfo(f"Processing time per non backtracking node: {((rospy.get_time() - self.seconds)-self.time_of_backtracks)/(self.number_of_nodes-self.number_of_backtracks)}")
         rospy.loginfo(f'Sensors detected:{len(self.sensor_positions)}')
         
         for i in range(len(self.path.poses)-1):
