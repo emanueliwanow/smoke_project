@@ -184,8 +184,9 @@ class droneBSA(BSA):
     def drone_check_for_sensor(self):
         if len(self.smoke_sensor_position_array)> 0 :                
             for i,pose in enumerate(self.smoke_sensor_position_array):
-                rospy.loginfo(f'Drone will go to X: {pose[0]}, Y: {pose[1]} to inspect the smoke sensor')
-                
+                if self.smoke_sensor_checked_array[i] == 0:
+                    rospy.loginfo(f'Drone will go to X: {pose[0]}, Y: {pose[1]} to inspect the smoke sensor')
+                    self.smoke_sensor_checked_array[i]= 1                
         return
 
     def droneBSA_loop(self):
