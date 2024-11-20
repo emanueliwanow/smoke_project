@@ -282,5 +282,5 @@ class droneBSA(BSA):
 if __name__ == '__main__':
     rospy.init_node("BSA")
     bsa = droneBSA()
-    bsa.droneMain()
+    bsa.smokeMain()
     
