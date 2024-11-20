@@ -13,7 +13,7 @@
 
   <arg name="depth_width"         default="424"/>
   <arg name="depth_height"        default="240"/>
-  <arg name="enable_depth"        default="true"/>
+  <arg name="enable_depth"        default="false"/>
 
   <arg name="infra_width"        default="640"/>
   <arg name="infra_height"       default="480"/>
