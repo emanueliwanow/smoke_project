@@ -16,7 +16,10 @@ class SMOKE:
     def actv_smoke(self,open):
         # If open: 1 -> open , open: -1 -> closed
         command = CommandInt()
-        rospy.loginfo('Test')
+        if open >1:
+            rospy.loginfo('Closing smoke spreader')
+        else:
+            rospy.loginfo('Opening smoke spreader')
         self.smoke_int.call(False,0,187,0,0,open,0,0,0,0,0,0)
         #self.smoke_ack.call(187,0,0,0)
     '''
