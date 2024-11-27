@@ -65,6 +65,7 @@ if __name__ == "__main__":
     
     smoke = SMOKE()
     smoke.actv_smoke(-1)
+    rospy.sleep(5)
     smoke.actv_smoke(1)
     """
     smoke = SMOKE()
