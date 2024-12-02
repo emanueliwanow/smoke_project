@@ -36,6 +36,7 @@ class droneBSA(BSA):
         self.smoke_sensor_checked_array = []
 
         self.smoke_sensor_threshold = 0.6
+        self.smoke_sensor_safety_box = [1.5,2] # [x,y] if smoke sensor is detected outside this safety box, it will be ignored
 
         self.smoke_class = SMOKE()
 
@@ -47,16 +48,19 @@ class droneBSA(BSA):
         if len(self.smoke_sensor_node_data.data)>0:
             if self.smoke_sensor_node_data.data[2] > 0.1:
                 prediction_sensor_position_x,prediction_sensor_position_y,prediction_sensor_position_z = self.smoke_sensor_node_data.data[0],self.smoke_sensor_node_data.data[1],self.smoke_sensor_node_data.data[2]
-                flag = 0
-                if len(self.smoke_sensor_position_array) != 0:
-                    for i in range(len(self.smoke_sensor_position_array)):
-                        if abs(self.smoke_sensor_position_array[i][0]-prediction_sensor_position_x)<self.smoke_sensor_threshold and abs(self.smoke_sensor_position_array[i][1]-prediction_sensor_position_y)<self.smoke_sensor_threshold:
-                            flag = 1
-                if flag == 0:
-                    rospy.loginfo("New sensor detected")
-                    self.smoke_sensor_position_array.append([prediction_sensor_position_x,prediction_sensor_position_y])
-                    self.smoke_sensor_checked_array.append(0)
-                    #rospy.loginfo(f'Number of sensor detected: {len(self.sensor_positions)}')
+                if prediction_sensor_position_x < self.smoke_sensor_safety_box[0] and prediction_sensor_position_y < self.smoke_sensor_safety_box[1]:
+                    flag = 0
+                    if len(self.smoke_sensor_position_array) != 0:
+                        for i in range(len(self.smoke_sensor_position_array)):
+                            if abs(self.smoke_sensor_position_array[i][0]-prediction_sensor_position_x)<self.smoke_sensor_threshold and abs(self.smoke_sensor_position_array[i][1]-prediction_sensor_position_y)<self.smoke_sensor_threshold:
+                                flag = 1
+                    if flag == 0:
+                        rospy.loginfo("New sensor detected")
+                        self.smoke_sensor_position_array.append([prediction_sensor_position_x,prediction_sensor_position_y])
+                        self.smoke_sensor_checked_array.append(0)
+                        #rospy.loginfo(f'Number of sensor detected: {len(self.sensor_positions)}')
+                else:
+                    respy.loginfo("Smoke sensor outside safety box detected, ignoring")
 
 
 
