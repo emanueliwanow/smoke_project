@@ -1,0 +1,21 @@
+<launch>
+  
+  
+
+
+  <!-- Launch D435 Camera -->
+  <include file="$(find smoke_project)/launch/rs_t265.launch" />
+
+
+  <!-- Launch Cartographer and Rplidar-->
+  <include file="$(find smoke_project)/launch/cartographer.launch" />
+
+  <node pkg="smoke_project" name="odometry_handler_node" type="OdometryHandler" output="screen"/>
+
+
+
+
+
+
+
+</launch>
