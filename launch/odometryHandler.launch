@@ -9,10 +9,10 @@
 
   <!-- Launch Cartographer and Rplidar-->
   <include file="$(find smoke_project)/launch/cartographer_t265.launch" />
-
+<!--
   <node pkg="smoke_project" name="odometry_handler_node" type="odometry_handler_node" output="screen"/>
 
-
+-->
 
 
 
