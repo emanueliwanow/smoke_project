@@ -9,9 +9,8 @@
 
   <node pkg="tf" type="static_transform_publisher" name="tf_baseLink_externalPoseChildFrame"
         args="0 0 0 0 0 0 base_link camera_pose_frame 1000"/>
-        
-  <node pkg="tf" type="static_transform_publisher" name="tf_odom_cameraOdom"
-        args="0 0 0 0 0 0 odom camera_odom_frame 1000"/>
+
+ 
 
         
   <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
