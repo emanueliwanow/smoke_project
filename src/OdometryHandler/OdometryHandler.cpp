@@ -41,13 +41,13 @@ void OdometryHandler::mocapOdometryCallback(const nav_msgs::Odometry& message_ho
 void OdometryHandler::OdometryWork()
 {   
     nav_msgs::Odometry msg;
-    msg.header = cartographer_pose_val_.header
-    msg.child_frame_id = camera_odom_val_.child_frame_id
-    msg.pose.pose.position.x = cartographer_pose_val_.pose.position.x
-    msg.pose.pose.position.y = cartographer_pose_val_.pose.position.y
-    msg.pose.pose.position.z = camera_odom_val_.pose.pose.position.z
-    msg.pose.pose.orientation = cartographer_pose_val_.pose.orientation
-    msg.twist = camera_odom_val_.twist
+    msg.header = cartographer_pose_val_.header;
+    msg.child_frame_id = camera_odom_val_.child_frame_id;
+    msg.pose.pose.position.x = cartographer_pose_val_.pose.position.x;
+    msg.pose.pose.position.y = cartographer_pose_val_.pose.position.y;
+    msg.pose.pose.position.z = camera_odom_val_.pose.pose.position.z;
+    msg.pose.pose.orientation = cartographer_pose_val_.pose.orientation;
+    msg.twist = camera_odom_val_.twist;
     //ROS_INFO("Working");
 }
 
