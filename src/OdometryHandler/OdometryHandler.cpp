@@ -46,7 +46,7 @@ void OdometryHandler::OdometryWork()
     msg.pose.pose.position.x = cartographer_pose_val_.pose.position.x;
     msg.pose.pose.position.y = cartographer_pose_val_.pose.position.y;
     msg.pose.pose.position.z = camera_odom_val_.pose.pose.position.z;
-    msg.pose.pose.orientation = cartographer_pose_val_.pose.orientation;
+    msg.pose.pose.orientation = camera_odom_val_.pose.pose.orientation;
     msg.twist = camera_odom_val_.twist;
     odometry_pub_.publish(msg);
     //ROS_INFO("Working");
