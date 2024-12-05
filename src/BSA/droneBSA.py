@@ -60,7 +60,7 @@ class droneBSA(BSA):
                         self.smoke_sensor_checked_array.append(0)
                         #rospy.loginfo(f'Number of sensor detected: {len(self.sensor_positions)}')
                 else:
-                    respy.loginfo("Smoke sensor outside safety box detected, ignoring")
+                    rospy.loginfo("Smoke sensor outside safety box detected, ignoring")
 
 
 
