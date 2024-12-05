@@ -48,7 +48,7 @@ class droneBSA(BSA):
         if len(self.smoke_sensor_node_data.data)>0:
             if self.smoke_sensor_node_data.data[2] > 0.1:
                 prediction_sensor_position_x,prediction_sensor_position_y,prediction_sensor_position_z = self.smoke_sensor_node_data.data[0],self.smoke_sensor_node_data.data[1],self.smoke_sensor_node_data.data[2]
-                if prediction_sensor_position_x < self.smoke_sensor_safety_box[0] and prediction_sensor_position_y < self.smoke_sensor_safety_box[1]:
+                if abs(prediction_sensor_position_x) < self.smoke_sensor_safety_box[0] and abs(prediction_sensor_position_y) < self.smoke_sensor_safety_box[1]:
                     flag = 0
                     if len(self.smoke_sensor_position_array) != 0:
                         for i in range(len(self.smoke_sensor_position_array)):
