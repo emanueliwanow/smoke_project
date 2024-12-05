@@ -21,7 +21,7 @@ class droneBSA(BSA):
         self.mav = MAV("1")
         self.takeoff_alt = 1        
         self.altitude = 0.6 
-        self.cell_resolution = 1.5
+        self.cell_resolution = 1.1
         self.drone_position_x = self.mav.drone_pose.pose.position.x
         self.drone_position_y = self.mav.drone_pose.pose.position.y
         self.position_x = 0
