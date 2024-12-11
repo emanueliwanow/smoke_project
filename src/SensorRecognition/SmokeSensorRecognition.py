@@ -78,7 +78,7 @@ class ImageListener:
 
 
     def detect_img(self, img):
-        result = self.model(img, verbose=False, conf = 0.65)
+        result = self.model(img, verbose=False, conf = 0.7)
         return result[0]
 
     def get_center_of_box(self, box):
