@@ -195,9 +195,9 @@ class droneBSA(BSA):
                     rospy.loginfo(f'Drone will go to X: {pose[0]}, Y: {pose[1]} to inspect the smoke sensor')
                     self.mav.set_position_with_yaw(pose[0]+0.2,pose[1],2.2)
                     rospy.loginfo('Inspecting')
-                    #self.smoke_class.actv_smoke(-1)
-                    self.mav.hold(3)
-                    #self.smoke_class.actv_smoke(1)
+                    self.smoke_class.actv_smoke(-1)
+                    self.mav.hold(4)
+                    self.smoke_class.actv_smoke(1)
                     self.mav.set_position_with_yaw(self.drone_position_x,self.drone_position_y,self.altitude)
                     self.smoke_sensor_checked_array[i]= 1                
         return
