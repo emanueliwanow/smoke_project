@@ -19,8 +19,8 @@ class droneBSA(BSA):
     def __init__(self,posX=0,posY=0):
         super().__init__(posX,posY)
         self.mav = MAV("1")
-        self.takeoff_alt = 1        
-        self.altitude = 0.6 
+        self.takeoff_alt = 1.5
+        self.altitude = 1.5
         self.cell_resolution = 1.1
         self.drone_position_x = self.mav.drone_pose.pose.position.x
         self.drone_position_y = self.mav.drone_pose.pose.position.y
@@ -193,7 +193,7 @@ class droneBSA(BSA):
             for i,pose in enumerate(self.smoke_sensor_position_array):
                 if self.smoke_sensor_checked_array[i] == 0:
                     rospy.loginfo(f'Drone will go to X: {pose[0]}, Y: {pose[1]} to inspect the smoke sensor')
-                    self.mav.set_position_with_yaw(pose[0]+0.15,pose[1],2)
+                    self.mav.set_position_with_yaw(pose[0]+0.2,pose[1],2)
                     rospy.loginfo('Inspecting')
                     #self.smoke_class.actv_smoke(-1)
                     self.mav.hold(3)
