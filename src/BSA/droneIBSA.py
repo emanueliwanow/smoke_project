@@ -208,9 +208,11 @@ class droneIBSA(BSA):
         error_x = self.position_x - self.drone_position_x
         error_y = self.position_y - self.drone_position_y
         size = len(path.poses)
-        for pose in enumerate(path.poses):
-            if pose[0]%10 == 0 or pose[0]==size-1:                
-                self.mav.set_position_with_yaw(pose[1].pose.position.x - error_x,pose[1].pose.position.y - error_y,self.altitude)
+        pose = path.poses[-1]
+        self.mav.set_position_with_yaw(pose.pose.position.x - error_x,pose.pose.position.y - error_y,self.altitude)
+        #for pose in enumerate(path.poses):
+        #    if pose[0]%10 == 0 or pose[0]==size-1:                
+        #        self.mav.set_position_with_yaw(pose[1].pose.position.x - error_x,pose[1].pose.position.y - error_y,self.altitude)
 
     def drone_backtracking(self,x,y,grid):
         # Backtracking without obstacle avoidance
