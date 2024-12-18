@@ -310,6 +310,9 @@ class droneIBSA(BSA):
         for i in range(100):
             self.og_pub.publish(self.cell_grid)
             self.rate.sleep()
+        self.state = 0 
+        surroundings = self.check_surroundings_2()
+        self.update_cellmap(self.x,self.y,surroundings)
         self.flood_fill()      
 
     
