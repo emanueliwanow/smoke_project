@@ -42,8 +42,8 @@ class droneIBSA(BSA):
 
 
         self.number_of_sensors = 3 #Number of sensor to inspect
-        self.distance_apart = 5 #Assumption of minimal distance beetween two sensor
-        self.pixels_apart = 6
+        self.distance_apart = 3.4 #Assumption of minimal distance beetween two sensor
+        self.pixels_apart = 8
 
         self.time_flood_fill = 0
 
@@ -239,7 +239,7 @@ class droneIBSA(BSA):
                     self.smoke_class.actv_smoke(1)
                     self.mav.set_position_with_yaw(self.drone_position_x,self.drone_position_y,self.altitude)
                     self.smoke_sensor_checked_array[i]= 1   
-        self.flood_fill()             
+                    self.flood_fill()             
         return
 
     def droneBSA_loop(self):
@@ -260,10 +260,10 @@ class droneIBSA(BSA):
         while not rospy.is_shutdown():
             surroundings = self.check_surroundings_2()
             self.update_cellmap(self.x,self.y,surroundings)
-            
+            self.drone_check_for_sensor()
             
             if surroundings == [1,1,0,1]:
-                self.drone_check_for_sensor() 
+                 
                 
                 backtrack = self.drone_backtracking(self.x,self.y,self.cell_grid)
                 self.state = 0
@@ -277,7 +277,7 @@ class droneIBSA(BSA):
                 
             if not surroundings[3]:
                 self.turn_left()
-                self.drone_check_for_sensor() 
+                 
                 self.drone_move()
                 surroundings = self.check_surroundings_2()
                 self.update_cellmap(self.x,self.y,surroundings)
@@ -285,7 +285,7 @@ class droneIBSA(BSA):
             elif surroundings[0]:
                 self.turn_right()
             else:
-                self.drone_check_for_sensor() 
+                 
                 self.drone_move()
 
     def droneMain(self):   
@@ -321,5 +321,5 @@ class droneIBSA(BSA):
 if __name__ == '__main__':
     rospy.init_node("BSA")
     bsa = droneIBSA()
-    bsa.droneMainTest()
+    bsa.droneMain()
     
