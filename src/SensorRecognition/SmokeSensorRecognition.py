@@ -143,8 +143,8 @@ class ImageListener:
                 self.pub_bb_image.publish(self.bridge.cv2_to_imgmsg(result_img, encoding='rgb8'))  ###Bei Jetson Verion herausnehmen (nur zu visualisierungszwecken)
                 Xtarget,Ytarget,Ztarget = self.estimate_sensor_position(x_center,y_center,drone_x,drone_y,drone_z)
                 array_msg.data = [Xtarget,Ytarget,Ztarget] 
-                rospy.loginfo(f'Drone position X:{drone_x}, Y:{drone_y}, Z:{drone_z}')
-                rospy.loginfo(f'Object detected X:{Xtarget}, Y:{Ytarget}, Z:{Ztarget}')
+                #rospy.loginfo(f'Drone position X:{drone_x}, Y:{drone_y}, Z:{drone_z}')
+                #rospy.loginfo(f'Object detected X:{Xtarget}, Y:{Ytarget}, Z:{Ztarget}')
                 #array_msg.data = [x_min, y_min, x_max, y_max, x_center, y_center,self.rbg_data.height, self.rbg_data.width]  # Example array values 
     
                 
