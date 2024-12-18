@@ -247,21 +247,13 @@ class droneIBSA(BSA):
         surroundings = self.check_surroundings_2()
         self.update_cellmap(self.x,self.y,surroundings)
         self.state = 1
-       '''
-        while not surroundings[0] and not rospy.is_shutdown():  
-            self.state = 1    
-            self.drone_check_for_sensor()      
-            self.drone_move()
-            surroundings = self.check_surroundings_2()
-            self.update_cellmap(self.x,self.y,surroundings)
-           ''' 
-        #self.state = 2
         
         while not rospy.is_shutdown():
             surroundings = self.check_surroundings_2()
             self.update_cellmap(self.x,self.y,surroundings)
             self.drone_check_for_sensor()
-            
+            surroundings = self.check_surroundings_2()
+            self.update_cellmap(self.x,self.y,surroundings)
             if surroundings == [1,1,0,1]:
                  
                 
